@@ -35,3 +35,7 @@ jobs:
     
     - name: Build
       run: npm run build
+
+    - name: TODO: Upload to azure storage
+      if: ${{ github.event }} == 'push'
+      run: printf "Should upload to cloud storage\n"
