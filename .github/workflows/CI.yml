@@ -12,19 +12,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - name: Change directory
-        run: cd crate
-      
       - name: Cargo test
         uses: actions-rs/cargo@v1.0.1
         with:
           command: test
+        working-directory: ./crate
 
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1.0.5
+      with:
+        default: true
     - uses: actions/setup-node@v1.1.0
       with:
         version: lts
