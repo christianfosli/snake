@@ -67,14 +67,17 @@ pub fn run() -> Result<(), JsValue> {
 
 fn add_canvas() -> Result<(), JsValue> {
     let document = web_sys::window().unwrap().document().unwrap();
-    let body = document.body().unwrap();
+    let main_section = match document.query_selector("main")? {
+        Some(v) => v.dyn_into::<HtmlElement>()?,
+        None => document.body().unwrap(),
+    };
 
     let canvas = document
         .create_element("canvas")?
         .dyn_into::<HtmlElement>()?;
     canvas.set_id("canvas");
 
-    body.append_child(&canvas)?;
+    main_section.append_child(&canvas)?;
 
     Ok(())
 }
