@@ -1,5 +1,7 @@
 # visnake-wasm
 
+![CI](https://github.com/christianfosli/visnake-wasm/workflows/CI/badge.svg)
+
 Work-in-progress replacement for [visnake with Flask and vanilla js](
 https://github.com/christianfosli/visnake)
 
