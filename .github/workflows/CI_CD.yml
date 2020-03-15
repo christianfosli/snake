@@ -64,7 +64,7 @@ jobs:
         run: npm run build
 
       - name: Clear azure storage container
-        run: az storage blob delete-batch --source '$web' --auth-mode 'login'
+        run: az storage blob delete-batch --account-name 'visnake' --source '$web' --auth-mode 'login'
 
       - name: Upload to azure storage
-        run: az storage blob upload-batch --destination '$web' --source 'dist' --auth-mode 'login'
+        run: az storage blob upload-batch --account-name 'visnake' --destination '$web' --source 'dist' --auth-mode 'login'
