@@ -17,7 +17,6 @@ jobs:
         uses: actions-rs/cargo@v1.0.1
         with:
           command: test
-          args: --manifest-path=crate/Cargo.toml
 
       - name: Wasm test
         run: wasm-pack test --chrome
