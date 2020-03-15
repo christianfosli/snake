@@ -9,25 +9,12 @@ Rust, WebAssembly, Azure Functions
 
 ---
 
-# `rust-parcel-template`
+## Based on [rust-parcel-template](https://github.com/rustwasm/rust-parcel-template)
 
-**Kickstart your Rust, WebAssembly, and Parcel project!**
-
-This template comes pre-configured with all the boilerplate for compiling Rust
-to WebAssembly and hooking into a Parcel build pipeline.
-
-* `npm run start` -- Serve the project locally for
-  development at `http://localhost:1234`.
+* `npm run start` -- Serve the project locally _with hot reload!_ at `http://localhost:1234`.
 
 * `npm run build` -- Bundle the project (in production mode)
 
+* `cargo test` -- Run rust unit tests
 
-## Using This Template
-
-```sh
-cargo install wasm-pack
-```
-
-```sh
-npm init rust-parcel my-app
-```
+* `wasm-pack test --chrome` -- Run `#[wasm_bindgen_test]` tests in chrome
