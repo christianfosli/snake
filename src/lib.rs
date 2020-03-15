@@ -41,7 +41,7 @@ impl Snake {
     }
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Direction {
     Right,
     Down,
@@ -112,8 +112,7 @@ mod tests {
     #[test]
     fn it_initially_moves_right() {
         let snake = Snake::new();
-        let initial_dir = &snake.direction;
-        assert!(matches!(Direction::Right, initial_dir));
+        assert_eq!(Direction::Right, snake.direction);
     }
 
     #[test]
