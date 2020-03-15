@@ -25,3 +25,13 @@ fn add_canvas() -> Result<(), JsValue> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pass() {
+        assert_eq!(1, 1);
+    }
+}
