@@ -2,12 +2,13 @@
 
 ![CI\_CD](https://github.com/christianfosli/visnake-wasm/workflows/CI_CD/badge.svg)
 
+Push to master triggers build and deploy to [azure](https://visnake.z6.web.core.windows.net/)
+
+Snake with vi/vim navigation.
 Work-in-progress replacement for [visnake with Flask and vanilla js](
-https://github.com/christianfosli/visnake)
-
-## Keywords
-
-Rust, WebAssembly, Azure Functions
+https://github.com/christianfosli/visnake),
+but using Rust and WebAssembly.
+I also plan to add highscore functionality through an Azure Function.
 
 ---
 
