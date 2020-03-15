@@ -18,9 +18,14 @@ impl Snake {
             thickness: 25.0,
         }
     }
+
     fn next_position(&self) -> Position {
-        let head = self.body.first().unwrap();
+        let head = self.head();
         match self.direction {
+            Direction::Up => Position {
+                y: head.y - self.thickness,
+                ..*head
+            },
             Direction::Right => Position {
                 x: head.x + self.thickness,
                 ..*head
@@ -33,20 +38,27 @@ impl Snake {
                 x: head.x - self.thickness,
                 ..*head
             },
-            Direction::Up => Position {
-                y: head.y - self.thickness,
-                ..*head
-            },
         }
+    }
+
+    fn head(&self) -> &Position {
+        self.body
+            .last()
+            .expect("snake has head because it has no body")
+    }
+
+    fn move_along(&mut self) {
+        self.body.remove(0);
+        self.body.push(self.next_position());
     }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Direction {
+    Up,
     Right,
     Down,
     Left,
-    Up,
 }
 
 #[derive(Copy, Clone)]
