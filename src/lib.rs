@@ -1,5 +1,7 @@
+extern crate gloo_timers;
 extern crate wasm_bindgen;
 extern crate web_sys;
+use gloo_timers::callback::Interval;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
@@ -11,8 +13,17 @@ use crate::snake::*;
 #[wasm_bindgen]
 pub fn run() -> Result<(), JsValue> {
     add_canvas()?;
-    let snake = Snake::new();
+
+    let mut snake = Snake::new();
     draw_snake(&snake)?;
+
+    Interval::new(500, move || {
+        let (moved_snake, old_tail) = snake.move_along();
+        draw_snake(&moved_snake).unwrap();
+        clear_tail(&old_tail, moved_snake.thickness).unwrap();
+        snake = moved_snake;
+    })
+    .forget();
 
     Ok(())
 }
@@ -54,5 +65,11 @@ fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
     for pos in snake.body.iter() {
         context.fill_rect(pos.x, pos.y, snake.thickness, snake.thickness);
     }
+    Ok(())
+}
+
+fn clear_tail(tail: &Position, thickness: f64) -> Result<(), JsValue> {
+    let context = get_canvas_context()?;
+    context.clear_rect(tail.x, tail.y, thickness, thickness);
     Ok(())
 }
