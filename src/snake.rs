@@ -38,7 +38,7 @@ impl Snake {
     fn head(&self) -> &Position {
         self.body
             .last()
-            .expect("snake has head because it has no body")
+            .expect("snake has no head because it has no body")
     }
 
     pub fn move_along(&mut self) {
@@ -74,7 +74,7 @@ mod tests {
     #[test]
     fn next_position_is_thickness_away_from_head() {
         let snake = Snake::new();
-        let head = snake.body.first().expect("snake should have a body");
+        let head = snake.head();
         let next = snake.next_position();
         assert_eq!(next.x, head.x + snake.thickness);
     }
