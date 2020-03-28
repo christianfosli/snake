@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Snake {
     pub body: Vec<Position>,
     pub thickness: f64,
@@ -41,9 +42,16 @@ impl Snake {
             .expect("snake has no head because it has no body")
     }
 
-    pub fn move_along(&mut self) {
-        self.body.remove(0);
-        self.body.push(self.next_position());
+    pub fn move_along(&self) -> (Snake, Position) {
+        let dropped = self.body.first().expect("snake should have a body");
+
+        let mut body: Vec<Position> = self.body.iter().skip(1).copied().collect();
+        body.push(self.next_position());
+
+        (Snake {
+            body: body,
+            ..*self
+        }, *dropped)
     }
 }
 
@@ -55,7 +63,7 @@ pub enum Direction {
     Left,
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct Position {
     pub x: f64,
     pub y: f64,
