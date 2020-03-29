@@ -1,15 +1,15 @@
-extern crate gloo_events;
-extern crate gloo_timers;
-extern crate wasm_bindgen;
-extern crate web_sys;
-use gloo_events::EventListener;
+use futures::stream::StreamExt;
 use gloo_timers::callback::Interval;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use web_sys::{CanvasRenderingContext2d, Document, HtmlCanvasElement, HtmlElement, KeyboardEvent};
+use wasm_bindgen_futures::spawn_local;
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
 
 mod snake;
 use crate::snake::*;
+
+mod vi;
+use crate::vi::*;
 
 // Called by our JS entry point
 #[wasm_bindgen]
@@ -19,31 +19,19 @@ pub fn run() -> Result<(), JsValue> {
     let mut snake = Snake::new();
     draw_snake(&snake)?;
 
-    let document: Document = web_sys::window()
-        .unwrap()
-        .document()
-        .unwrap()
-        .dyn_into::<Document>()
-        .unwrap();
-
     let mut direction = snake.direction;
+    let document = web_sys::window().unwrap().document().unwrap();
+    let mut vi = Vi::new(&document);
 
-    EventListener::new(&document, "keydown", move |event| {
-        let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
-        let key: &str = &event.key();
-        let dir: Option<Direction> = match key {
-            "h" => Some(Direction::Left),
-            "j" => Some(Direction::Down),
-            "k" => Some(Direction::Up),
-            "l" => Some(Direction::Right),
-            _ => None,
-        };
-        match dir {
-            Some(dir) => direction = dir,
-            None => (),
-        };
-    })
-    .forget();
+    let fut = async move {
+        while let Some(dir) = vi.next().await {
+            let debug_message = format!("key pressed - {:?}", &dir);
+            web_sys::console::log_1(&debug_message.into());
+            direction = dir;
+        }
+    };
+
+    spawn_local(fut);
 
     Interval::new(500, move || {
         snake.direction = direction;
