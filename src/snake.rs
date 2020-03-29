@@ -2,7 +2,7 @@
 pub struct Snake {
     pub body: Vec<Position>,
     pub thickness: f64,
-    direction: Direction,
+    pub direction: Direction,
 }
 
 impl Snake {

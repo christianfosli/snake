@@ -11,6 +11,7 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 wasm-bindgen = "0.2"
 gloo-timers = "0.2"
+gloo-events = "0.1"
 
 [dependencies.web-sys]
 version = "0.3"
@@ -21,6 +22,7 @@ features = [
   "Element",
   "HtmlElement",
   "HtmlCanvasElement",
+  "KeyboardEvent",
   "Node",
   "Window",
 ]
