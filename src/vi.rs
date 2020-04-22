@@ -9,7 +9,7 @@ use web_sys::{EventTarget, KeyboardEvent};
 
 pub struct Vi {
     pub receiver: mpsc::UnboundedReceiver<Direction>,
-    listener: EventListener,
+    pub listener: EventListener,
 }
 
 impl Vi {
