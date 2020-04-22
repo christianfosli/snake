@@ -1,0 +1,16 @@
+body {
+  font-family: monospace;
+}
+
+header {
+  text-align: center;
+}
+
+main {
+  display: flex;
+  justify-content: center;
+}
+
+footer {
+  text-align: center;
+}
