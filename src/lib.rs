@@ -1,5 +1,6 @@
 use futures::stream::StreamExt;
 use gloo_timers::callback::Interval;
+use std::sync::{Arc, Mutex};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
@@ -19,22 +20,22 @@ pub fn run() -> Result<(), JsValue> {
     let mut snake = Snake::new();
     draw_snake(&snake)?;
 
-    let mut direction = snake.direction;
-    let document = web_sys::window().unwrap().document().unwrap();
-    let mut vi = Vi::new(&document);
+    let direction_ptr = Arc::new(Mutex::new(snake.direction));
+    let direction_ptr_2 = Arc::clone(&direction_ptr);
 
     let fut = async move {
+        let document = web_sys::window().unwrap().document().unwrap();
+        let mut vi = Vi::new(&document);
+
         while let Some(dir) = vi.next().await {
-            let debug_message = format!("key pressed - {:?}", &dir);
-            web_sys::console::log_1(&debug_message.into());
-            direction = dir;
+            *direction_ptr_2.lock().unwrap() = dir;
         }
     };
 
     spawn_local(fut);
 
     Interval::new(500, move || {
-        snake.direction = direction;
+        snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
         draw_snake(&moved_snake).unwrap();
         clear_tail(&old_tail, moved_snake.thickness).unwrap();
