@@ -1,6 +1,9 @@
 use futures::stream::StreamExt;
 use gloo_timers::callback::Interval;
-use std::sync::{Arc, Mutex};
+use std::{
+    f64::consts::PI,
+    sync::{Arc, Mutex},
+};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
@@ -38,7 +41,13 @@ pub fn run() -> Result<(), JsValue> {
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
         draw_snake(&moved_snake).unwrap();
-        clear_tail(&old_tail, moved_snake.thickness).unwrap();
+        match old_tail {
+            Some(tail) => clear(&tail).unwrap(),
+            None => {
+                clear(&snake.target).unwrap();
+                draw_apple(&moved_snake.target).unwrap();
+            }
+        }
         snake = moved_snake;
     })
     .forget();
@@ -80,14 +89,24 @@ fn get_canvas_context() -> Result<CanvasRenderingContext2d, JsValue> {
 
 fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
+    context.set_fill_style(&JsValue::from_str("#bada55"));
     for pos in snake.body.iter() {
-        context.fill_rect(pos.x, pos.y, snake.thickness, snake.thickness);
+        context.fill_rect(pos.x, pos.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
     }
     Ok(())
 }
 
-fn clear_tail(tail: &Position, thickness: f64) -> Result<(), JsValue> {
+fn draw_apple(apple: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
-    context.clear_rect(tail.x, tail.y, thickness, thickness);
+    let radius = snake::LINE_THICKNESS;
+    context.set_fill_style(&JsValue::from_str("red"));
+    context.ellipse(apple.x, apple.y, radius, radius, PI / 4.0, 0.0, 2.0 * PI)?;
+    context.fill();
+    Ok(())
+}
+
+fn clear(rect: &Position) -> Result<(), JsValue> {
+    let context = get_canvas_context()?;
+    context.clear_rect(rect.x, rect.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
     Ok(())
 }
