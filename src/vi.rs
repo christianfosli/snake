@@ -19,10 +19,10 @@ impl Vi {
             let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
             let key: &str = &event.key();
             let dir: Option<Direction> = match key {
-                "h" => Some(Direction::Left),
-                "j" => Some(Direction::Down),
-                "k" => Some(Direction::Up),
-                "l" => Some(Direction::Right),
+                "h" | "ArrowLeft" => Some(Direction::Left),
+                "j" | "ArrowDown" => Some(Direction::Down),
+                "k" | "ArrowUp" => Some(Direction::Up),
+                "l" | "ArrowRight" => Some(Direction::Right),
                 _ => None,
             };
             match dir {
