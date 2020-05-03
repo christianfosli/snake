@@ -11,6 +11,10 @@ main {
   justify-content: center;
 }
 
+canvas {
+  border: 1px solid #bada55;
+}
+
 footer {
   text-align: center;
 }
