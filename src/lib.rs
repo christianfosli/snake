@@ -108,10 +108,13 @@ fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
 
 fn draw_apple(apple: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
-    let radius = (snake::LINE_THICKNESS / 2.0).round();
+    let radius = (snake::LINE_THICKNESS / 2.0).floor();
+    let x = (apple.x + snake::LINE_THICKNESS / 2.0).round();
+    let y = (apple.y + snake::LINE_THICKNESS / 2.0).round();
+
     context.set_fill_style(&JsValue::from_str("red"));
     context.begin_path();
-    context.ellipse(apple.x, apple.y, radius, radius, PI / 4.0, 0.0, 2.0 * PI)?;
+    context.ellipse(x, y, radius, radius, PI / 4.0, 0.0, 2.0 * PI)?;
     context.fill();
     context.close_path();
     Ok(())
