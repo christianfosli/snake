@@ -22,9 +22,12 @@ pub fn run() -> Result<(), JsValue> {
 
     let mut snake = Snake::new();
     draw_snake(&snake)?;
+    draw_apple(&snake.target)?;
 
     let direction_ptr = Arc::new(Mutex::new(snake.direction));
     let direction_ptr_2 = Arc::clone(&direction_ptr);
+    let interval_ptr = Arc::new(Mutex::new(0));
+    let interval_ptr_2 = Arc::clone(&interval_ptr);
 
     let fut = async move {
         let document = web_sys::window().unwrap().document().unwrap();
@@ -37,16 +40,21 @@ pub fn run() -> Result<(), JsValue> {
 
     spawn_local(fut);
 
-    Interval::new(500, move || {
+    *interval_ptr.lock().unwrap() = Interval::new(500, move || {
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
+
+        if !snake.alive {
+            web_sys::window()
+                .unwrap()
+                .clear_interval_with_handle(*interval_ptr_2.lock().unwrap());
+            return;
+        }
+
         draw_snake(&moved_snake).unwrap();
         match old_tail {
             Some(tail) => clear(&tail).unwrap(),
-            None => {
-                clear(&snake.target).unwrap();
-                draw_apple(&moved_snake.target).unwrap();
-            }
+            None => draw_apple(&moved_snake.target).unwrap(),
         }
         snake = moved_snake;
     })
@@ -64,8 +72,10 @@ fn add_canvas() -> Result<(), JsValue> {
 
     let canvas = document
         .create_element("canvas")?
-        .dyn_into::<HtmlElement>()?;
+        .dyn_into::<HtmlCanvasElement>()?;
     canvas.set_id("canvas");
+    canvas.set_width(snake::WIDTH);
+    canvas.set_height(snake::HEIGHT);
 
     main_section.append_child(&canvas)?;
 
@@ -98,10 +108,12 @@ fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
 
 fn draw_apple(apple: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
-    let radius = snake::LINE_THICKNESS;
+    let radius = (snake::LINE_THICKNESS / 2.0).round();
     context.set_fill_style(&JsValue::from_str("red"));
+    context.begin_path();
     context.ellipse(apple.x, apple.y, radius, radius, PI / 4.0, 0.0, 2.0 * PI)?;
     context.fill();
+    context.close_path();
     Ok(())
 }
 

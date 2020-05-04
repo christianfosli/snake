@@ -1,7 +1,7 @@
 use js_sys::Math;
 
-pub const WIDTH: f64 = 300.0;
-pub const HEIGHT: f64 = 300.0;
+pub const WIDTH: u32 = 300;
+pub const HEIGHT: u32 = 300;
 pub const LINE_THICKNESS: f64 = 25.0;
 
 #[derive(Debug)]
@@ -44,22 +44,33 @@ impl Snake {
         }
     }
 
-    fn head(&self) -> &Position {
+    pub fn head(&self) -> &Position {
         self.body
             .last()
             .expect("snake has no head because it has no body")
     }
 
-    fn tail(&self) -> &Position {
+    pub fn tail(&self) -> &Position {
         self.body
-            .last()
+            .first()
             .expect("snake has no tail because it has no body")
     }
 
     pub fn move_along(&self) -> (Snake, Option<Position>) {
         let new_head = self.next_position();
+        let alive =
+            self.alive && new_head.is_inside_walls() && !self.body.iter().any(|p| *p == new_head);
 
-        let alive = new_head.is_inside_walls();
+        if !self.alive {
+            return (
+                Snake {
+                    body: self.body.clone(),
+                    alive,
+                    ..*self
+                },
+                None,
+            );
+        }
 
         let (dropped, target, mut body) = if new_head == self.target {
             (None, Position::random(), self.body.clone())
@@ -101,14 +112,19 @@ pub struct Position {
 
 impl Position {
     fn random() -> Position {
-        Position {
-            x: Math::random() * WIDTH,
-            y: Math::random() * HEIGHT,
-        }
+        let mut x = (Math::random() * WIDTH as f64).round();
+        let mut y = (Math::random() * HEIGHT as f64).round();
+        // we substract val % LINE_THICKNESS so the snake can get here
+        x -= x % LINE_THICKNESS;
+        y -= y % LINE_THICKNESS;
+        Position { x, y }
     }
 
     fn is_inside_walls(&self) -> bool {
-        self.x >= 0.0 && self.x <= WIDTH && self.y >= 0.0 && self.y <= HEIGHT
+        self.x.round() as i32 >= 0
+            && self.x.round() as u32 <= WIDTH
+            && self.y.round() as i32 >= 0
+            && self.y.round() as u32 <= HEIGHT
     }
 }
 
