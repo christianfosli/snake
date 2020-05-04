@@ -40,7 +40,7 @@ pub fn run() -> Result<(), JsValue> {
 
     spawn_local(fut);
 
-    *interval_ptr.lock().unwrap() = Interval::new(500, move || {
+    *interval_ptr.lock().unwrap() = Interval::new(300, move || {
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
         snake = moved_snake;
