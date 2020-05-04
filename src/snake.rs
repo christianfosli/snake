@@ -122,9 +122,9 @@ impl Position {
 
     fn is_inside_walls(&self) -> bool {
         self.x.round() as i32 >= 0
-            && self.x.round() as u32 <= WIDTH
+            && (self.x.round() as u32) < WIDTH
             && self.y.round() as i32 >= 0
-            && self.y.round() as u32 <= HEIGHT
+            && (self.y.round() as u32) < HEIGHT
     }
 }
 
@@ -139,10 +139,95 @@ mod tests {
     }
 
     #[test]
+    fn it_initially_lives() {
+        let snake = Snake::new();
+        assert!(snake.alive);
+    }
+
+    #[test]
     fn next_position_is_thickness_away_from_head() {
         let snake = Snake::new();
         let head = snake.head();
+
         let next = snake.next_position();
+
         assert_eq!(next.x, head.x + LINE_THICKNESS);
+    }
+
+    #[test]
+    fn it_dies_when_crashing_into_wall() {
+        let snake = Snake {
+            direction: Direction::Left,
+            ..Snake::new()
+        };
+
+        let (snake, _) = snake.move_along();
+
+        assert_eq!(false, snake.alive);
+    }
+
+    #[test]
+    fn it_moves_its_tail_when_moving() {
+        let snake = Snake {
+            target: Position { x: 100.0, y: 100.0 },
+            ..Snake::new()
+        };
+        let original_tail = *snake.tail();
+
+        let (snake, _) = snake.move_along();
+
+        assert_ne!(original_tail, *snake.tail());
+        assert_eq!(1, snake.body.len());
+    }
+
+    #[test]
+    fn it_keeps_its_tail_and_gets_longer_when_eating_apple() {
+        let snake = Snake {
+            direction: Direction::Right,
+            target: Position {
+                x: LINE_THICKNESS,
+                y: 0.0,
+            },
+            ..Snake::new()
+        };
+        let original_tail = *snake.tail();
+
+        let (snake, _) = snake.move_along();
+
+        assert_eq!(original_tail, *snake.tail());
+        assert_eq!(2, snake.body.len());
+    }
+
+    #[test]
+    fn is_inside_walls_should_be_true() {
+        assert!(Position { x: 0.0, y: 0.0 }.is_inside_walls());
+        assert!(Position { x: 50.0, y: 50.0 }.is_inside_walls());
+        assert!(Position {
+            x: (WIDTH - 1) as f64,
+            y: (HEIGHT - 1) as f64
+        }
+        .is_inside_walls());
+    }
+
+    #[test]
+    fn is_inside_walls_should_be_false() {
+        assert_eq!(false, Position { x: -25.0, y: 0.0 }.is_inside_walls());
+        assert_eq!(
+            false,
+            Position {
+                x: WIDTH as f64,
+                y: 0.0
+            }
+            .is_inside_walls()
+        );
+        assert_eq!(false, Position { x: 0.0, y: -25.0 }.is_inside_walls());
+        assert_eq!(
+            false,
+            Position {
+                x: 0.0,
+                y: HEIGHT as f64,
+            }
+            .is_inside_walls()
+        );
     }
 }
