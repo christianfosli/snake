@@ -73,7 +73,7 @@ impl Snake {
         }
 
         let (dropped, target, mut body) = if new_head == self.target {
-            (None, Position::random(), self.body.clone())
+            (None, Position::random_except(&self.body), self.body.clone())
         } else {
             (
                 Some(*self.tail()),
@@ -118,6 +118,15 @@ impl Position {
         x -= x % LINE_THICKNESS;
         y -= y % LINE_THICKNESS;
         Position { x, y }
+    }
+
+    fn random_except(blacklist: &Vec<Position>) -> Position {
+        loop {
+            let random = Position::random();
+            if blacklist.iter().all(|p| *p != random) {
+                return random;
+            }
+        }
     }
 
     fn is_inside_walls(&self) -> bool {
