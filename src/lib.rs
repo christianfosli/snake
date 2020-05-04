@@ -1,6 +1,9 @@
 use futures::stream::StreamExt;
 use gloo_timers::callback::Interval;
-use std::sync::{Arc, Mutex};
+use std::{
+    f64::consts::PI,
+    sync::{Arc, Mutex},
+};
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
@@ -19,9 +22,12 @@ pub fn run() -> Result<(), JsValue> {
 
     let mut snake = Snake::new();
     draw_snake(&snake)?;
+    draw_apple(&snake.target)?;
 
     let direction_ptr = Arc::new(Mutex::new(snake.direction));
     let direction_ptr_2 = Arc::clone(&direction_ptr);
+    let interval_ptr = Arc::new(Mutex::new(0));
+    let interval_ptr_2 = Arc::clone(&interval_ptr);
 
     let fut = async move {
         let document = web_sys::window().unwrap().document().unwrap();
@@ -34,12 +40,23 @@ pub fn run() -> Result<(), JsValue> {
 
     spawn_local(fut);
 
-    Interval::new(500, move || {
+    *interval_ptr.lock().unwrap() = Interval::new(300, move || {
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
-        draw_snake(&moved_snake).unwrap();
-        clear_tail(&old_tail, moved_snake.thickness).unwrap();
         snake = moved_snake;
+
+        if !snake.alive {
+            web_sys::window()
+                .unwrap()
+                .clear_interval_with_handle(*interval_ptr_2.lock().unwrap());
+            return;
+        }
+
+        draw_snake(&snake).unwrap();
+        match old_tail {
+            Some(tail) => clear(&tail).unwrap(),
+            None => draw_apple(&snake.target).unwrap(),
+        }
     })
     .forget();
 
@@ -55,8 +72,10 @@ fn add_canvas() -> Result<(), JsValue> {
 
     let canvas = document
         .create_element("canvas")?
-        .dyn_into::<HtmlElement>()?;
+        .dyn_into::<HtmlCanvasElement>()?;
     canvas.set_id("canvas");
+    canvas.set_width(snake::WIDTH);
+    canvas.set_height(snake::HEIGHT);
 
     main_section.append_child(&canvas)?;
 
@@ -80,14 +99,29 @@ fn get_canvas_context() -> Result<CanvasRenderingContext2d, JsValue> {
 
 fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
+    context.set_fill_style(&JsValue::from_str("#bada55"));
     for pos in snake.body.iter() {
-        context.fill_rect(pos.x, pos.y, snake.thickness, snake.thickness);
+        context.fill_rect(pos.x, pos.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
     }
     Ok(())
 }
 
-fn clear_tail(tail: &Position, thickness: f64) -> Result<(), JsValue> {
+fn draw_apple(apple: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
-    context.clear_rect(tail.x, tail.y, thickness, thickness);
+    let radius = (snake::LINE_THICKNESS / 2.0).floor();
+    let x = (apple.x + snake::LINE_THICKNESS / 2.0).round();
+    let y = (apple.y + snake::LINE_THICKNESS / 2.0).round();
+
+    context.set_fill_style(&JsValue::from_str("red"));
+    context.begin_path();
+    context.ellipse(x, y, radius, radius, PI / 4.0, 0.0, 2.0 * PI)?;
+    context.fill();
+    context.close_path();
+    Ok(())
+}
+
+fn clear(rect: &Position) -> Result<(), JsValue> {
+    let context = get_canvas_context()?;
+    context.clear_rect(rect.x, rect.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
     Ok(())
 }

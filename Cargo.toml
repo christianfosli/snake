@@ -30,6 +30,12 @@ features = [
   "Window",
 ]
 
+[dependencies.rand]
+version = "0.7"
+features = [
+  "wasm-bindgen",
+]
+
 [dev-dependencies]
 wasm-bindgen-test = "0.3"
 js-sys = "0.3"
