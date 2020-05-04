@@ -1,4 +1,4 @@
-use js_sys::Math;
+use rand;
 
 pub const WIDTH: u32 = 300;
 pub const HEIGHT: u32 = 300;
@@ -112,8 +112,8 @@ pub struct Position {
 
 impl Position {
     fn random() -> Position {
-        let mut x = (Math::random() * WIDTH as f64).round();
-        let mut y = (Math::random() * HEIGHT as f64).round();
+        let mut x = (rand::random::<f64>() * WIDTH as f64).round();
+        let mut y = (rand::random::<f64>() * HEIGHT as f64).round();
         // we substract val % LINE_THICKNESS so the snake can get here
         x -= x % LINE_THICKNESS;
         y -= y % LINE_THICKNESS;
