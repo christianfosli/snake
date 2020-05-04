@@ -1,4 +1,4 @@
-use rand::random;
+use js_sys::Math;
 
 pub const WIDTH: f64 = 300.0;
 pub const HEIGHT: f64 = 300.0;
@@ -102,8 +102,8 @@ pub struct Position {
 impl Position {
     fn random() -> Position {
         Position {
-            x: random::<f64>() * WIDTH,
-            y: random::<f64>() * HEIGHT,
+            x: Math::random() * WIDTH,
+            y: Math::random() * HEIGHT,
         }
     }
 
