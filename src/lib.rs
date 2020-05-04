@@ -43,6 +43,7 @@ pub fn run() -> Result<(), JsValue> {
     *interval_ptr.lock().unwrap() = Interval::new(500, move || {
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
+        snake = moved_snake;
 
         if !snake.alive {
             web_sys::window()
@@ -51,12 +52,11 @@ pub fn run() -> Result<(), JsValue> {
             return;
         }
 
-        draw_snake(&moved_snake).unwrap();
+        draw_snake(&snake).unwrap();
         match old_tail {
             Some(tail) => clear(&tail).unwrap(),
-            None => draw_apple(&moved_snake.target).unwrap(),
+            None => draw_apple(&snake.target).unwrap(),
         }
-        snake = moved_snake;
     })
     .forget();
 
