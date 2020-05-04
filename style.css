@@ -15,6 +15,10 @@ canvas {
   border: 1px solid #bada55;
 }
 
+main ~ div {
+  text-align: center;
+}
+
 footer {
   text-align: center;
 }
