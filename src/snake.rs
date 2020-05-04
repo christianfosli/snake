@@ -72,17 +72,15 @@ impl Snake {
             );
         }
 
-        let (dropped, target, mut body) = if new_head == self.target {
-            (None, Position::random_except(&self.body), self.body.clone())
+        let (dropped, target, body) = if new_head == self.target {
+            let mut body = self.body.clone();
+            body.push(new_head);
+            (None, Position::random_except(&body), body)
         } else {
-            (
-                Some(*self.tail()),
-                self.target,
-                self.body.iter().skip(1).copied().collect(),
-            )
+            let mut body = self.body.iter().skip(1).copied().collect::<Vec<_>>();
+            body.push(new_head);
+            (Some(*self.tail()), self.target, body)
         };
-
-        body.push(new_head);
 
         (
             Snake {
