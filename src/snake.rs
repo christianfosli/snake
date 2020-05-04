@@ -82,7 +82,7 @@ impl Snake {
             )
         };
 
-        body.push(self.next_position());
+        body.push(new_head);
 
         (
             Snake {
