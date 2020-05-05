@@ -77,7 +77,7 @@ fn add_canvas() -> Result<(), JsValue> {
     canvas.set_width(snake::WIDTH);
     canvas.set_height(snake::HEIGHT);
 
-    main_section.append_child(&canvas)?;
+    main_section.insert_adjacent_element("afterbegin".into(), &canvas)?;
 
     Ok(())
 }
