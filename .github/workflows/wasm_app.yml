@@ -1,4 +1,4 @@
-name: CI_CD
+name: wasm_app
 
 on:
   push:
