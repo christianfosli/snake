@@ -1,6 +1,7 @@
 # visnake-wasm
 
-![CI\_CD](https://github.com/christianfosli/visnake-wasm/workflows/CI_CD/badge.svg)
+![wasm_app](https://github.com/christianfosli/visnake-wasm/workflows/wasm_app/badge.svg)
+![highscore_functions](https://github.com/christianfosli/visnake-wasm/workflows/highscore_functions/badge.svg)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
 Snake with vi/vim navigation.
