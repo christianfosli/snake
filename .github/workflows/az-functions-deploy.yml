@@ -11,8 +11,8 @@ jobs:
         with:
           dotnet-version: '3.1'
       - run: |
-        cd highscore-api
-        dotnet build --configuration Release --output ./output
+          cd highscore-api
+          dotnet build --configuration Release --output ./output
       - uses: azure/login@v1
       - uses: azure/functions-action@v1
         with:
