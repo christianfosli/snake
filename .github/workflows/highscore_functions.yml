@@ -1,0 +1,46 @@
+name: highscore_functions
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - highscore-api/**
+      - .github/workflows/highscore_functions.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - highscore-api/**
+      - .github/workflows/highscore_functions.yml
+
+jobs:
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+      - name: Run dotnet build
+        run: |
+          cd highscore-api
+          dotnet build --configuration Release --output ./output
+  build-and-deploy:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '3.1.100'
+      - name: Run dotnet build
+        run: |
+          cd highscore-api
+          dotnet build --configuration Release --output ./output
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - uses: azure/functions-action@v1
+        with:
+          app-name: visnakehighscores
+          package: highscore-api/output
