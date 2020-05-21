@@ -14,22 +14,19 @@ namespace highscore_api
     {
         [FunctionName("HighScoreFetcher")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("C# HTTP trigger function processed a request.");
+            log.LogInformation("HighScoreFetcher triggered");
 
-            string name = req.Query["name"];
+            // TODO: fetch highscores from a database
+            var highscores = new []
+            {
+                new HighScore { UserName = "ferris the crab", Score = 5},
+                new HighScore { UserName = "snoop the snake", Score = 6},
+            };
 
-            string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            dynamic data = JsonConvert.DeserializeObject(requestBody);
-            name = name ?? data?.name;
-
-            string responseMessage = string.IsNullOrEmpty(name)
-                ? "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response."
-                : $"Hello, {name}. This HTTP triggered function executed successfully.";
-
-            return new OkObjectResult(responseMessage);
+            return new OkObjectResult(highscores);
         }
     }
 }
