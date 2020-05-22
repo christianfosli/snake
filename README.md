@@ -44,8 +44,11 @@ func start --build
 
 ### Required Tools
 
-* [docker](https://www.docker.com/) or
-  [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
+**[docker](https://www.docker.com/)**
+
+or
+
+* [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
 
 * [rust](http://rustlang.org/)
 
