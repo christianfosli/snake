@@ -30,6 +30,7 @@ jobs:
         with:
           command: test
           toolchain: stable
+          args: --manifest-path front-end/Cargo.toml
 
       - name: Wasm test
         run: wasm-pack test --headless --chrome
