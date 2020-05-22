@@ -7,14 +7,9 @@
 Snake with vi/vim navigation.
 Visit [playsnake.no](https://www.playsnake.no) to play!
 
-Push to master triggers build and deploy to Azure storage.
-
-Work-in-progress replacement for [visnake with Flask and vanilla js](
-https://github.com/christianfosli/visnake).
-
 ## Development
 
-Run all service with docker compose:
+Run all services with docker compose:
 
 ```console
 docker-compose up -d
@@ -48,19 +43,19 @@ docker-compose build
 
 ### Required Tools
 
-**[docker](https://www.docker.com/)**
+**[docker](https://www.docker.com/) and docker-compose (incuded in Docker Desktop)**
 
-or
+Or
 
 * [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
+
+* [dotnet core 3.1](https://github.com/dotnet/core)
+
+* [node](https://nodejs.org/en/)
 
 * [rust](http://rustlang.org/)
 
 * [wasm-pack](https://github.com/rustwasm/wasm-pack)
-
-* [node](https://nodejs.org/en/)
-
-* [dotnet core 3.1](https://github.com/dotnet/core)
 
 ### Formatting
 
