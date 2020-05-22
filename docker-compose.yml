@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  app:
+    build: front-end
+    ports:
+      - '1234:1234'
+    volumes:
+      - './front-end/src:/usr/src/app/src'
+  api:
+    build: highscore-api
+    ports:
+      - '7071:80'

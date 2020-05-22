@@ -14,11 +14,31 @@ https://github.com/christianfosli/visnake).
 
 ## Development
 
+Run all service with docker compose:
+
+```console
+docker-compose up -d
+```
+
+Then open front-end at [localhost:1234](http://localhost:1234)
+
+To stop all services and remove their containers:
+
+```console
+docker-compose down
+```
+
+Changing rust files (files in front-end/src) should update automatically,
+as this directory is mounted as a volume in the container.
+**All other changes require rebuilding the images**
+
+```console
+docker-compose build
+```
+
 ### Front-End App
 
 **Based on [rust-parcel-template](https://github.com/rustwasm/rust-parcel-template)**
-
-* `npm run start` -- Serve the project locally _with hot reload!_ at `http://localhost:1234`.
 
 * `npm run build` -- Bundle the project (in production mode)
 
@@ -26,26 +46,13 @@ https://github.com/christianfosli/visnake).
 
 * `wasm-pack test --chrome` -- Run `#[wasm_bindgen_test]` tests in chrome
 
-### Azure Functions for High-Score
-
-Run with docker:
-
-```console
-cd highscore-api
-docker build -t highscoreapi
-docker run -p 7071:80 highscoreapi
-```
-Or run with azure-functions-core-tools:
-
-```console
-cd highscore-api
-func start --build
-```
-
 ### Required Tools
 
-* [docker](https://www.docker.com/) or
-  [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
+**[docker](https://www.docker.com/)**
+
+or
+
+* [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
 
 * [rust](http://rustlang.org/)
 
