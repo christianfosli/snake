@@ -14,4 +14,4 @@ RUN npm install
 
 EXPOSE 1234
 
-ENTRYPOINT ["npm", "start"]
+CMD ["npm", "start"]
