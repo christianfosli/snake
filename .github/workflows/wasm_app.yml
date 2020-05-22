@@ -3,21 +3,27 @@ name: wasm_app
 on:
   push:
     branches: [master]
-    paths-ignore:
-      - highscore-api/**
-      - README.md
+    paths:
+      - front-end/**
+      - .github/workflows/wasm_app.yml
   pull_request:
     branches: [master]
-    paths-ignore:
-      - highscore-api/**
-      - README.md
+    paths:
+      - front-end/**
+      - .github/workflows/wasm_app.yml
+
+defaults:
+  run:
+    working-directory: front-end
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: jetli/wasm-pack-action@v0.2.0
+
+      - name: Install
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cargo test
         uses: actions-rs/cargo@v1.0.1
@@ -39,7 +45,9 @@ jobs:
       - uses: actions/setup-node@v1.1.0
         with:
           version: 12.x
-      - uses: jetli/wasm-pack-action@v0.2.0
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install javascript dependencies
         run: npm install
@@ -58,10 +66,12 @@ jobs:
       - uses: actions/setup-node@v1.1.0
         with:
           version: 12.x
-      - uses: jetli/wasm-pack-action@v0.2.0
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install wasm-pack
+        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Install javascript dependencies
         run: npm install
