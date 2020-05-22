@@ -28,6 +28,14 @@ To stop all services and remove their containers:
 docker-compose down
 ```
 
+Changing rust files (files in front-end/src) should update automatically,
+as this directory is mounted as a volume in the container.
+**All other changes require rebuilding the images**
+
+```console
+docker-compose build
+```
+
 ### Front-End App
 
 **Based on [rust-parcel-template](https://github.com/rustwasm/rust-parcel-template)**

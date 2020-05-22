@@ -1,16 +1,16 @@
 FROM node:lts
 
 RUN curl https://sh.rustup.rs -sSf | sh -s --  --default-toolchain stable -y
-
 ENV PATH="/root/.cargo/bin:$PATH"
 
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
-COPY . /src
+WORKDIR /usr/src/app
 
-WORKDIR /src
-
+COPY package*.json ./
 RUN npm install
+
+COPY . .
 
 EXPOSE 1234
 
