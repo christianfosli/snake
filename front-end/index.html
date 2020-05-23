@@ -13,37 +13,54 @@
       <h1>snake with vi keys</h1>
     </header>
     <main>
-      <!--canvas to be added by js-->
-      <div class="break"></div>
-      <div class="keyboard">
-        <button disabled>1</button>
-        <button
-          onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyK', key: 'k'}));"
-        >
-          2
-        </button>
-        <button disabled>3</button>
-        <div class="break"></div>
-        <button
-          onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyH', key: 'h'}))"
-        >
-          4
-        </button>
-        <button
-          onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))"
-        >
-          5
-        </button>
-        <button
-          onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyL', key: 'l'}))"
-        >
-          6
-        </button>
-        <div class="break"></div>
-        <button disabled>7</button>
-        <button disabled>8</button>
-        <button disabled>9</button>
+      <div id="phone">
+        <!--canvas to be added by js-->
+        <div class="keyboard">
+          <button disabled>1</button>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyK', key: 'k'}));"
+          >
+            2
+          </button>
+          <button disabled>3</button>
+          <div class="break"></div>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyH', key: 'h'}))"
+          >
+            4
+          </button>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))"
+          >
+            5
+          </button>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyL', key: 'l'}))"
+          >
+            6
+          </button>
+          <div class="break"></div>
+          <button disabled>7</button>
+          <button disabled>8</button>
+          <button disabled>9</button>
+        </div>
       </div>
+      <aside>
+        <h2>Top Scores</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>UserName</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody id="highscore-tbody">
+            <tr>
+              <td colspan="2">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </aside>
     </main>
     <div>
       <p>

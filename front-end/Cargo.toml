@@ -10,11 +10,23 @@ edition = "2018"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4"
 gloo-timers = "0.2"
 gloo-events = "0.1"
 futures = "0.3"
+serde_derive = "1.0"
+
+[dependencies.serde]
+version = "1.0"
+features = [
+  "derive",
+]
+
+[dependencies.wasm-bindgen]
+version = "0.2"
+features = [
+  "serde-serialize",
+]
 
 [dependencies.web-sys]
 version = "0.3"
@@ -23,10 +35,15 @@ features = [
   "CanvasRenderingContext2d",
   "Document",
   "Element",
+  "Headers",
   "HtmlElement",
   "HtmlCanvasElement",
   "KeyboardEvent",
   "Node",
+  "Request",
+  "RequestInit",
+  "RequestMode",
+  "Response",
   "Window",
 ]
 

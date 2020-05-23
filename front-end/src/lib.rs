@@ -7,7 +7,7 @@ use std::{
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
+use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
 
 mod snake;
 use crate::snake::*;
@@ -15,9 +15,17 @@ use crate::snake::*;
 mod vi;
 use crate::vi::*;
 
+mod highscores;
+use crate::highscores::*;
+
 // Called by our JS entry point
 #[wasm_bindgen]
 pub fn run() -> Result<(), JsValue> {
+    spawn_local(async {
+        fetch_and_set_highscores()
+            .await
+            .unwrap_or_else(|err| console::error_1(&err.into()))
+    });
     add_canvas()?;
 
     let mut snake = Snake::new();
@@ -29,7 +37,7 @@ pub fn run() -> Result<(), JsValue> {
     let interval_ptr = Arc::new(Mutex::new(0));
     let interval_ptr_2 = Arc::clone(&interval_ptr);
 
-    let fut = async move {
+    let keylistener = async move {
         let document = web_sys::window().unwrap().document().unwrap();
         let mut vi = Vi::new(&document);
 
@@ -38,7 +46,7 @@ pub fn run() -> Result<(), JsValue> {
         }
     };
 
-    spawn_local(fut);
+    spawn_local(keylistener);
 
     *interval_ptr.lock().unwrap() = Interval::new(300, move || {
         snake.direction = *direction_ptr.lock().unwrap();
@@ -65,7 +73,7 @@ pub fn run() -> Result<(), JsValue> {
 
 fn add_canvas() -> Result<(), JsValue> {
     let document = web_sys::window().unwrap().document().unwrap();
-    let main_section = match document.query_selector("main")? {
+    let main_section = match document.query_selector("#phone")? {
         Some(v) => v.dyn_into::<HtmlElement>()?,
         None => document.body().unwrap(),
     };
