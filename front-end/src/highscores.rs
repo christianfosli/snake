@@ -1,14 +1,23 @@
 use serde::{Deserialize, Serialize};
+use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{HtmlElement, Request, RequestInit, RequestMode, Response};
+use web_sys::{console, HtmlElement, Request, RequestInit, RequestMode, Response};
+
+#[wasm_bindgen(
+    inline_js = "export function base_url() { return process.env.HIGHSCORE_API_BASE_URL; }"
+)]
+extern "C" {
+    fn base_url() -> String;
+}
 
 pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
     let mut options = RequestInit::new();
     options.method("GET");
     options.mode(RequestMode::Cors);
 
-    let base_url = "http://localhost:7071"; // TODO: get from env variable
+    let base_url = base_url();
+    console::log_1(&format!("using highscore api url: {}", base_url).into());
     let endpoint = format!("{}/api/HighScoreFetcher", base_url);
 
     let request = Request::new_with_str_and_init(&endpoint, &options)?;
