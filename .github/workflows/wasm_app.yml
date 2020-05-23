@@ -38,6 +38,8 @@ jobs:
   build:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1.0.5
@@ -59,6 +61,8 @@ jobs:
   build-and-deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
     steps:
       - uses: actions/checkout@v2
       - uses: actions-rs/toolchain@v1.0.5
