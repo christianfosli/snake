@@ -1,6 +1,4 @@
 using System;
-using System.Data;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
