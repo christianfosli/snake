@@ -1,12 +1,14 @@
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
 namespace highscore_api
 {
@@ -20,9 +22,17 @@ namespace highscore_api
             log.LogInformation("HighScorePoster triggered");
 
             var body = await new StreamReader(req.Body).ReadToEndAsync();
-            var highscore = JsonConvert.DeserializeObject<HighScore>(body);
+            var highscore = JsonSerializer.Deserialize<HighScore>(body, new JsonSerializerOptions {
+                PropertyNameCaseInsensitive = true,
+            });
 
-            // TODO: Store score in a database
+            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                ?? throw new InvalidOperationException("No DB connection string found");
+
+            using var conn = new SqlConnection(connectionString);
+
+            await conn.ExecuteAsync("insert into highscores(UserName, Score, TimeStamp) " +
+                "values (@UserName, @Score, @TimeStamp)", highscore);
 
             return new CreatedResult(nameof(HighScoreFetcher), highscore);
         }

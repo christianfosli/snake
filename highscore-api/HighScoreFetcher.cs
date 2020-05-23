@@ -1,12 +1,13 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Dapper;
+using System.Linq;
+using Microsoft.Data.SqlClient;
 
 namespace highscore_api
 {
@@ -19,14 +20,14 @@ namespace highscore_api
         {
             log.LogInformation("HighScoreFetcher triggered");
 
-            // TODO: fetch highscores from a database
-            var highscores = new []
-            {
-                new HighScore { UserName = "ferris the crab", Score = 5},
-                new HighScore { UserName = "snoop the snake", Score = 6},
-            };
+            var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                ?? throw new InvalidOperationException("No DB connection string found");
 
-            return new OkObjectResult(highscores);
+            using var conn = new SqlConnection(connectionString);
+
+            var highscores = await conn.QueryAsync<HighScore>(@"select * from highscores");
+
+            return new OkObjectResult(highscores.ToList());
         }
     }
 }

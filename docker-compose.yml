@@ -9,5 +9,25 @@ services:
       - './front-end/src:/usr/src/app/src'
   api:
     build: highscore-api
+    environment:
+      - CONNECTION_STRING=Server=tcp:db,1433;Database=snake-hs;User ID=sa;Password=Secret_01
     ports:
       - '7071:80'
+    depends_on:
+      - db
+  db:
+    image: mcr.microsoft.com/mssql/server:latest
+    environment:
+      - SA_PASSWORD=Secret_01
+      - ACCEPT_EULA=Y
+    ports:
+      - '1433:1433'
+    volumes:
+      - 'sql-server-data:/var/opt/mssql'
+      - './database/entrypoint.bash:/entrypoint.bash'
+      - './database/init.bash:/init.bash'
+      - './database/schema.sql:/schema.sql'
+    command: /bin/bash /entrypoint.bash
+
+volumes:
+  sql-server-data:

@@ -57,6 +57,9 @@ Or
 
 * [wasm-pack](https://github.com/rustwasm/wasm-pack)
 
+* A SQL Server database with schema matching database/schema.sql,
+  and the database connection string exposed to the function apps as `CONNECTION_STRING` env variable
+
 ### Formatting
 
 Prettier is used to format HTML, CSS and JavaScript files.
