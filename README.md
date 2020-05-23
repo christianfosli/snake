@@ -1,11 +1,21 @@
-# visnake-wasm
+# snake
+
+Snake with vi/vim navigation.
+Visit [playsnake.no](https://www.playsnake.no) to play!
 
 ![wasm_app](https://github.com/christianfosli/visnake-wasm/workflows/wasm_app/badge.svg)
 ![highscore_functions](https://github.com/christianfosli/visnake-wasm/workflows/highscore_functions/badge.svg)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
-Snake with vi/vim navigation.
-Visit [playsnake.no](https://www.playsnake.no) to play!
+## Architecture
+
+The system consists of 3 parts, which are all defined in this repository:
+
+ * Front-end application where snake is implemented with rust/webassembly
+
+ * Azure functions for setting and fetching highscores from a SQL Server database
+
+ * MS SQL Server database
 
 ## Development
 
@@ -31,9 +41,11 @@ as these are mounted as volumes in the container.
 docker-compose build
 ```
 
-### Front-End App
+---
 
-**Based on [rust-parcel-template](https://github.com/rustwasm/rust-parcel-template)**
+**The front-end is based on [rust-parcel-template](https://github.com/rustwasm/rust-parcel-template)**
+
+### More useful commands for front-end:
 
 * `npm run build` -- Bundle the project (in production mode)
 
