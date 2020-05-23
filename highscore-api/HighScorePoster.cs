@@ -34,6 +34,12 @@ namespace highscore_api
             await conn.ExecuteAsync("insert into highscores(UserName, Score, TimeStamp) " +
                 "values (@UserName, @Score, @TimeStamp)", highscore);
 
+            // It is not yet possible to configure CORS for az functions when
+            // running locally inside a container
+            // issue: https://github.com/Azure/azure-functions-host/issues/5090
+            // so we'll adjust the headers ourselves:
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+
             return new CreatedResult(nameof(HighScoreFetcher), highscore);
         }
     }

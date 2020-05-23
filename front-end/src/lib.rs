@@ -1,13 +1,17 @@
 use futures::stream::StreamExt;
 use gloo_timers::callback::Interval;
+use serde::{Deserialize, Serialize};
 use std::{
     f64::consts::PI,
     sync::{Arc, Mutex},
 };
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
-use wasm_bindgen_futures::spawn_local;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
+use wasm_bindgen_futures::{spawn_local, JsFuture};
+use web_sys::{
+    console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement, Request, RequestInit,
+    RequestMode, Response,
+};
 
 mod snake;
 use crate::snake::*;
@@ -18,6 +22,11 @@ use crate::vi::*;
 // Called by our JS entry point
 #[wasm_bindgen]
 pub fn run() -> Result<(), JsValue> {
+    spawn_local(async {
+        fetch_and_set_highscores()
+            .await
+            .unwrap_or_else(|err| console::log_1(&err.into()))
+    });
     add_canvas()?;
 
     let mut snake = Snake::new();
@@ -29,7 +38,7 @@ pub fn run() -> Result<(), JsValue> {
     let interval_ptr = Arc::new(Mutex::new(0));
     let interval_ptr_2 = Arc::clone(&interval_ptr);
 
-    let fut = async move {
+    let keylistener = async move {
         let document = web_sys::window().unwrap().document().unwrap();
         let mut vi = Vi::new(&document);
 
@@ -38,7 +47,7 @@ pub fn run() -> Result<(), JsValue> {
         }
     };
 
-    spawn_local(fut);
+    spawn_local(keylistener);
 
     *interval_ptr.lock().unwrap() = Interval::new(300, move || {
         snake.direction = *direction_ptr.lock().unwrap();
@@ -61,6 +70,54 @@ pub fn run() -> Result<(), JsValue> {
     .forget();
 
     Ok(())
+}
+
+async fn fetch_and_set_highscores() -> Result<(), JsValue> {
+    let mut options = RequestInit::new();
+    options.method("GET");
+    options.mode(RequestMode::Cors);
+
+    let base_url = "http://localhost:7071"; // TODO: get from env variable
+    let endpoint = format!("{}/api/HighScoreFetcher", base_url);
+
+    let request = Request::new_with_str_and_init(&endpoint, &options)?;
+
+    request.headers().set("Accept", "application/json")?;
+
+    let window = web_sys::window().unwrap();
+    let res: Response = JsFuture::from(window.fetch_with_request(&request))
+        .await?
+        .dyn_into()
+        .unwrap();
+
+    let json = JsFuture::from(res.json()?).await?;
+    let highscores: Vec<HighScore> = json.into_serde().unwrap();
+    let html: String = highscores.iter().map(|h| h.to_html_row()).collect();
+
+    let tbody = match window
+        .document()
+        .unwrap()
+        .query_selector("#highscore-tbody")?
+    {
+        Some(v) => v.dyn_into::<HtmlElement>()?,
+        None => panic!("no table body found!"),
+    };
+
+    tbody.set_inner_html(&html);
+
+    Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct HighScore {
+    userName: String, // weird capitalization to match C# conventions
+    score: usize,
+}
+
+impl HighScore {
+    fn to_html_row(&self) -> String {
+        format!("<tr><td>{}</td><td>{}</td></tr>", self.userName, self.score)
+    }
 }
 
 fn add_canvas() -> Result<(), JsValue> {

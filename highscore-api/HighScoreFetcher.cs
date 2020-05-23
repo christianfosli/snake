@@ -27,6 +27,12 @@ namespace highscore_api
 
             var highscores = await conn.QueryAsync<HighScore>(@"select * from highscores");
 
+            // It is not yet possible to configure CORS for az functions when
+            // running locally inside a container
+            // issue: https://github.com/Azure/azure-functions-host/issues/5090
+            // so we'll adjust the headers ourselves:
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+
             return new OkObjectResult(highscores.ToList());
         }
     }
