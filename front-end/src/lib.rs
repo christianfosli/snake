@@ -24,7 +24,7 @@ pub fn run() -> Result<(), JsValue> {
     spawn_local(async {
         fetch_and_set_highscores()
             .await
-            .unwrap_or_else(|err| console::log_1(&err.into()))
+            .unwrap_or_else(|err| console::error_1(&err.into()))
     });
     add_canvas()?;
 
