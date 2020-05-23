@@ -1,3 +1,5 @@
+/* General Layout */
+
 body {
   font-family: monospace;
   background-color: lightslategray;
@@ -10,8 +12,21 @@ header {
 
 main {
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   flex-wrap: wrap;
+}
+
+main ~ div,
+footer {
+  text-align: center;
+}
+
+/* Phone and Canvas */
+
+#phone {
+  padding: 0.5rem;
+  background-color: black;
+  border-radius: 1rem;
 }
 
 .break {
@@ -24,9 +39,6 @@ main {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
-  padding: 0.5rem;
-  background-color: black;
-  border-radius: 0 0 1rem 1rem;
 }
 
 .keyboard button {
@@ -41,14 +53,37 @@ main {
 }
 
 canvas {
-  border: 0.5rem solid black;
   background-color: white;
 }
 
-main ~ div {
-  text-align: center;
+/* HighScore table */
+
+aside h2 {
+  color: #bada55;
+  margin: 1rem;
 }
 
-footer {
-  text-align: center;
+table {
+  border-collapse: collapse;
+}
+
+table,
+th,
+td {
+  border: 1px solid black;
+}
+
+thead {
+  background-color: #bada55;
+  color: black;
+}
+
+tbody {
+  background-color: white;
+  color: black;
+}
+
+th,
+td {
+  padding: 0.5rem;
 }

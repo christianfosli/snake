@@ -65,7 +65,7 @@ pub fn run() -> Result<(), JsValue> {
 
 fn add_canvas() -> Result<(), JsValue> {
     let document = web_sys::window().unwrap().document().unwrap();
-    let main_section = match document.query_selector("main")? {
+    let main_section = match document.query_selector("#phone")? {
         Some(v) => v.dyn_into::<HtmlElement>()?,
         None => document.body().unwrap(),
     };
