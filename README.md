@@ -23,8 +23,8 @@ To stop all services and remove their containers:
 docker-compose down
 ```
 
-Changing rust files (files in front-end/src) should update automatically,
-as this directory is mounted as a volume in the container.
+Changing files in front-end/src, front-end/style.css and front-end/index.html should update automatically,
+as these are mounted as volumes in the container.
 **All other changes require rebuilding the images**
 
 ```console
