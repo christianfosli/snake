@@ -17,7 +17,7 @@ The system consists of 3 parts, which are all defined in this repository:
 
  * MS SQL Server database
 
- ![architecture diagram](./architecture.svg)
+ ![architecture diagram](./architecture_try2.svg)
 
 ## Development
 
