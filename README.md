@@ -7,7 +7,7 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 ![highscore_functions](https://github.com/christianfosli/visnake-wasm/workflows/highscore_functions/badge.svg)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
 
-## Architecture
+## Architecture 🏗
 
 The system consists of 3 parts, which are all defined in this repository:
 
@@ -17,7 +17,9 @@ The system consists of 3 parts, which are all defined in this repository:
 
  * MS SQL Server database
 
-## Development
+ ![architecture diagram](./architecture.svg)
+
+## Development 🐳
 
 Run all services with docker compose:
 
