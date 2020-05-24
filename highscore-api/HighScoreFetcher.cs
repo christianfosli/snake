@@ -25,7 +25,7 @@ namespace highscore_api
 
             using var conn = new SqlConnection(connectionString);
 
-            var highscores = await conn.QueryAsync<HighScore>(@"select * from highscores");
+            var topTen = await conn.QueryAsync<HighScore>(@"select top(10) * from highscores order by [score] desc");
 
             // It is not yet possible to configure CORS for az functions when
             // running locally inside a container
@@ -33,7 +33,7 @@ namespace highscore_api
             // so we'll adjust the headers ourselves:
             req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
-            return new OkObjectResult(highscores.ToList());
+            return new OkObjectResult(topTen.ToList());
         }
     }
 }
