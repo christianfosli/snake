@@ -12,6 +12,32 @@ extern "C" {
 }
 
 pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
+    let window = web_sys::window().unwrap();
+
+    let tbody = match window
+        .document()
+        .unwrap()
+        .query_selector("#highscore-tbody")?
+    {
+        Some(v) => v.dyn_into::<HtmlElement>()?,
+        None => panic!("no table body found!"),
+    };
+
+    let highscores = fetch_highscores().await;
+    let html = match highscores {
+        Ok(highscores) => highscores
+            .iter()
+            .map(|h| h.to_html_row())
+            .collect::<String>(),
+        Err(_) => String::from("<tr><td colspan=\"2\">Failed to fetch :-(</td></tr>"),
+    };
+
+    tbody.set_inner_html(&html);
+
+    Ok(())
+}
+
+pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     let mut options = RequestInit::new();
     options.method("GET");
     options.mode(RequestMode::Cors);
@@ -27,30 +53,17 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
     let window = web_sys::window().unwrap();
     let res: Response = JsFuture::from(window.fetch_with_request(&request))
         .await?
-        .dyn_into()
-        .unwrap();
+        .dyn_into()?;
 
     let json = JsFuture::from(res.json()?).await?;
     let highscores: Vec<HighScore> = json.into_serde().unwrap();
-    let html: String = highscores.iter().map(|h| h.to_html_row()).collect();
 
-    let tbody = match window
-        .document()
-        .unwrap()
-        .query_selector("#highscore-tbody")?
-    {
-        Some(v) => v.dyn_into::<HtmlElement>()?,
-        None => panic!("no table body found!"),
-    };
-
-    tbody.set_inner_html(&html);
-
-    Ok(())
+    Ok(highscores)
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[allow(non_snake_case)] // weird capitalization to match js conventions
-struct HighScore {
+pub struct HighScore {
     userName: String,
     score: usize,
 }

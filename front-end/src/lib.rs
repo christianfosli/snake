@@ -54,19 +54,8 @@ pub fn run() -> Result<(), JsValue> {
         snake = moved_snake;
 
         if !snake.alive {
-            web_sys::window()
-                .unwrap()
-                .clear_interval_with_handle(*interval_ptr_2.lock().unwrap());
-
-            write_on_canvas(&format!(
-                "score: {} {}",
-                snake.apple_count(),
-                match snake.apple_count() {
-                    1 => "apple",
-                    _ => "apples",
-                }
-            ))
-            .unwrap();
+            game_over(&snake, *interval_ptr_2.lock().unwrap())
+                .unwrap_or_else(|err| console::error_1(&err.into()));
             return;
         }
 
@@ -77,6 +66,23 @@ pub fn run() -> Result<(), JsValue> {
         }
     })
     .forget();
+
+    Ok(())
+}
+
+fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
+    web_sys::window()
+        .unwrap()
+        .clear_interval_with_handle(interval_handle);
+
+    write_on_canvas(&format!(
+        "score: {} {}",
+        snake.apple_count(),
+        match snake.apple_count() {
+            1 => "apple",
+            _ => "apples",
+        }
+    ))?;
 
     Ok(())
 }
