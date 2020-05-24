@@ -44,8 +44,8 @@ pub fn run() -> Result<(), JsValue> {
         let mut vi = Vi::new(&document);
 
         while let Some(new_dir) = vi.next().await {
-            let current_dir = snake_ptr_2.lock().unwrap().direction;
-            if new_dir != current_dir.turn_180_degrees() {
+            let snake = snake_ptr_2.lock().unwrap();
+            if snake.apple_count() == 0 || new_dir != snake.direction.turn_180_degrees() {
                 *direction_ptr_2.lock().unwrap() = new_dir;
             }
         }
