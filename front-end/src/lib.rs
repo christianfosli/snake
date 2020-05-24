@@ -57,6 +57,16 @@ pub fn run() -> Result<(), JsValue> {
             web_sys::window()
                 .unwrap()
                 .clear_interval_with_handle(*interval_ptr_2.lock().unwrap());
+
+            write_on_canvas(&format!(
+                "score: {} {}",
+                snake.apple_count(),
+                match snake.apple_count() {
+                    1 => "apple",
+                    _ => "apples",
+                }
+            ))
+            .unwrap();
             return;
         }
 
@@ -131,5 +141,13 @@ fn draw_apple(apple: &Position) -> Result<(), JsValue> {
 fn clear(rect: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
     context.clear_rect(rect.x, rect.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
+    Ok(())
+}
+
+fn write_on_canvas(text: &str) -> Result<(), JsValue> {
+    let context = get_canvas_context()?;
+    context.set_font("30px monospace");
+    context.set_fill_style(&"blue".into());
+    context.fill_text(text, 10.0, 100.0)?;
     Ok(())
 }

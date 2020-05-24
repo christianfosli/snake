@@ -56,6 +56,10 @@ impl Snake {
             .expect("snake has no tail because it has no body")
     }
 
+    pub fn apple_count(&self) -> usize {
+        self.body.len() - 1
+    }
+
     pub fn move_along(&self) -> (Snake, Option<Position>) {
         let new_head = self.next_position();
         let alive =
@@ -236,5 +240,25 @@ mod tests {
             }
             .is_inside_walls()
         );
+    }
+
+    #[test]
+    fn apple_count_should_initially_be_zero() {
+        assert_eq!(0, Snake::new().apple_count());
+    }
+
+    #[test]
+    fn apple_count_should_increase_when_eating_apple() {
+        let snake = Snake {
+            direction: Direction::Right,
+            target: Position {
+                x: LINE_THICKNESS,
+                y: 0.0,
+            },
+            ..Snake::new()
+        };
+        let (snake, _) = snake.move_along();
+
+        assert_eq!(1, snake.apple_count());
     }
 }
