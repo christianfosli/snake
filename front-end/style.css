@@ -23,6 +23,10 @@ footer {
   text-align: center;
 }
 
+.d-none {
+  display: none;
+}
+
 /* Phone and Canvas */
 
 #phone {
@@ -88,4 +92,15 @@ tbody {
 th,
 td {
   padding: 0.5rem;
+}
+
+/* Privacy Policy */
+
+#privacy-policy {
+  background-color: white;
+  color: black;
+  font: sans-serif;
+  padding: 0.5rem;
+  max-width: 1000px;
+  margin: auto;
 }

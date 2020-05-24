@@ -63,11 +63,47 @@
         </table>
       </aside>
     </main>
+    <div id="privacy-policy" class="d-none">
+      <h3>Privacy Policy</h3>
+
+      <h4>What information is collected?</h4>
+      <p>
+        If you get a highscore, the provided username and your highscore is
+        collected along with a timestamp.
+      </p>
+      <p>
+        If you do not consent to having any information collected, please click
+        Cancel on the username prompt.
+      </p>
+
+      <h4>Why is this information collected?</h4>
+      <p>
+        To provide highscore functionality.
+      </p>
+
+      <h4>Who has access to this information?</h4>
+      <p>
+        The top highscores are accessible to anyone. They are shown here in the
+        Top Scores table. Other highscores are accessible only to Christian for
+        a limited time, until they are removed from the database.
+      </p>
+
+      <h4>Further Questions and Data Removal Requests</h4>
+      <p>
+        Please open up an issue on GitHub.
+      </p>
+    </div>
     <footer>
-      Christian Fosli | Mostly written in
+      Christian Fosli | Written in
       <a href="https://www.rust-lang.org">Rust</a> and compiled to Web Assembly
       | Source code on
       <a href="https://github.com/christianfosli/snake">GitHub</a>
+      |
+      <button
+        onclick="document.getElementById('privacy-policy').classList.toggle('d-none')"
+      >
+        Privacy
+      </button>
     </footer>
   </body>
 </html>
