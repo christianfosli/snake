@@ -124,3 +124,18 @@ impl HighScore {
         format!("<tr><td>{}</td><td>{}</td></tr>", self.userName, self.score)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn to_html_row_should_include_username() {
+        let score = HighScore {
+            userName: String::from("testuser"),
+            score: 0,
+        };
+
+        assert!(score.to_html_row().find(&score.userName).is_some());
+    }
+}
