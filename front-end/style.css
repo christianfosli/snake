@@ -18,7 +18,6 @@ main {
   margin: auto;
 }
 
-main ~ div,
 footer {
   text-align: center;
 }
