@@ -28,12 +28,14 @@ pub fn run() -> Result<(), JsValue> {
     });
     add_canvas()?;
 
-    let mut snake = Snake::new();
+    let snake = Snake::new();
     draw_snake(&snake)?;
     draw_apple(&snake.target)?;
 
     let direction_ptr = Arc::new(Mutex::new(snake.direction));
     let direction_ptr_2 = Arc::clone(&direction_ptr);
+    let snake_ptr = Arc::new(Mutex::new(snake));
+    let snake_ptr_2 = Arc::clone(&snake_ptr);
     let interval_ptr = Arc::new(Mutex::new(0));
     let interval_ptr_2 = Arc::clone(&interval_ptr);
 
@@ -41,24 +43,28 @@ pub fn run() -> Result<(), JsValue> {
         let document = web_sys::window().unwrap().document().unwrap();
         let mut vi = Vi::new(&document);
 
-        while let Some(dir) = vi.next().await {
-            *direction_ptr_2.lock().unwrap() = dir;
+        while let Some(new_dir) = vi.next().await {
+            let current_dir = snake_ptr_2.lock().unwrap().direction;
+            if new_dir != current_dir.turn_180_degrees() {
+                *direction_ptr_2.lock().unwrap() = new_dir;
+            }
         }
     };
 
     spawn_local(keylistener);
 
     *interval_ptr.lock().unwrap() = Interval::new(300, move || {
+        let mut snake = snake_ptr.lock().unwrap();
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
-        snake = moved_snake;
+        *snake = moved_snake;
 
         if !snake.alive {
             let interval_handle = *interval_ptr_2.lock().unwrap();
             let dead_snake = Snake {
                 // just creating a copy so we can move it into async fn
                 body: snake.body.clone(),
-                ..snake
+                ..*snake
             };
             spawn_local(async move {
                 game_over(&dead_snake, interval_handle)
