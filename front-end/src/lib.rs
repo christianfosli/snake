@@ -54,8 +54,17 @@ pub fn run() -> Result<(), JsValue> {
         snake = moved_snake;
 
         if !snake.alive {
-            game_over(&snake, *interval_ptr_2.lock().unwrap())
-                .unwrap_or_else(|err| console::error_1(&err.into()));
+            let interval_handle = *interval_ptr_2.lock().unwrap();
+            let dead_snake = Snake {
+                // just creating a copy so we can move it into async fn
+                body: snake.body.clone(),
+                ..snake
+            };
+            spawn_local(async move {
+                game_over(&dead_snake, interval_handle)
+                    .await
+                    .unwrap_or_else(|err| console::error_1(&err.into()));
+            });
             return;
         }
 
@@ -70,7 +79,7 @@ pub fn run() -> Result<(), JsValue> {
     Ok(())
 }
 
-fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
+async fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
     web_sys::window()
         .unwrap()
         .clear_interval_with_handle(interval_handle);
@@ -83,6 +92,8 @@ fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
             _ => "apples",
         }
     ))?;
+
+    check_and_submit_highscore(snake.apple_count()).await?;
 
     Ok(())
 }

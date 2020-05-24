@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_json;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
@@ -59,6 +60,56 @@ pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     let highscores: Vec<HighScore> = json.into_serde().unwrap();
 
     Ok(highscores)
+}
+
+pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
+    let top_scores = fetch_highscores().await?;
+    if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
+        console::log_1(&format!("Score {} is a highscore!", score).into());
+        let window = web_sys::window().unwrap();
+        let name =
+            match window.prompt_with_message("Please enter your name for the highscore table")? {
+                Some(v) => v,
+                None => {
+                    console::warn_1(&"highscore submission aborted as no username given".into());
+                    return Ok(());
+                }
+            };
+
+        let new_highscore = HighScore {
+            userName: name,
+            score,
+        };
+
+        let json = serde_json::to_string(&new_highscore).unwrap();
+
+        let mut options = RequestInit::new();
+        options.method("POST");
+        options.mode(RequestMode::Cors);
+        options.body(Some(&json.into()));
+
+        let endpoint = format!("{}/api/HighScorePoster", base_url());
+
+        let request = Request::new_with_str_and_init(&endpoint, &options)?;
+
+        request.headers().set("Accept", "application/json")?;
+        request.headers().set("Content-Type", "text/plain")?;
+
+        let res: Response = JsFuture::from(window.fetch_with_request(&request))
+            .await?
+            .dyn_into()?;
+
+        match res.ok() {
+            true => {
+                console::log_1(&"highscore submitted".into());
+                fetch_and_set_highscores().await?;
+            }
+            false => {
+                console::error_1(&"failed to submit highscore".into());
+            }
+        }
+    }
+    Ok(())
 }
 
 #[derive(Debug, Serialize, Deserialize)]
