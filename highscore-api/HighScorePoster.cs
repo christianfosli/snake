@@ -16,10 +16,24 @@ namespace highscore_api
     {
         [FunctionName("HighScorePoster")]
         public static async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = null)] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)] HttpRequest req,
             ILogger log)
         {
-            log.LogInformation("HighScorePoster triggered");
+            log.LogInformation($"HighScorePoster triggered with method {req.Method}");
+
+            // It is not yet possible to configure CORS for az functions when
+            // running locally inside a container
+            // issue: https://github.com/Azure/azure-functions-host/issues/5090
+            // so we'll adjust the headers ourselves:
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+
+            // We also need to manually handle CORS pre-flight requests.
+            // This would be done automatically by Azure Functions on Azure
+            // but for the same reason as above, it doesn't work inside docker
+            if (req.Method.ToLower() == "options")
+            {
+                return new OkResult();
+            }
 
             var body = await new StreamReader(req.Body).ReadToEndAsync();
             var highscore = JsonSerializer.Deserialize<HighScore>(body, new JsonSerializerOptions {
@@ -33,12 +47,6 @@ namespace highscore_api
 
             await conn.ExecuteAsync("insert into highscores(UserName, Score, TimeStamp) " +
                 "values (@UserName, @Score, @TimeStamp)", highscore);
-
-            // It is not yet possible to configure CORS for az functions when
-            // running locally inside a container
-            // issue: https://github.com/Azure/azure-functions-host/issues/5090
-            // so we'll adjust the headers ourselves:
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
             return new CreatedResult(nameof(HighScoreFetcher), highscore);
         }

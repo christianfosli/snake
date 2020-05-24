@@ -54,9 +54,17 @@ pub fn run() -> Result<(), JsValue> {
         snake = moved_snake;
 
         if !snake.alive {
-            web_sys::window()
-                .unwrap()
-                .clear_interval_with_handle(*interval_ptr_2.lock().unwrap());
+            let interval_handle = *interval_ptr_2.lock().unwrap();
+            let dead_snake = Snake {
+                // just creating a copy so we can move it into async fn
+                body: snake.body.clone(),
+                ..snake
+            };
+            spawn_local(async move {
+                game_over(&dead_snake, interval_handle)
+                    .await
+                    .unwrap_or_else(|err| console::error_1(&err.into()));
+            });
             return;
         }
 
@@ -67,6 +75,25 @@ pub fn run() -> Result<(), JsValue> {
         }
     })
     .forget();
+
+    Ok(())
+}
+
+async fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
+    web_sys::window()
+        .unwrap()
+        .clear_interval_with_handle(interval_handle);
+
+    write_on_canvas(&format!(
+        "score: {} {}",
+        snake.apple_count(),
+        match snake.apple_count() {
+            1 => "apple",
+            _ => "apples",
+        }
+    ))?;
+
+    check_and_submit_highscore(snake.apple_count()).await?;
 
     Ok(())
 }
@@ -131,5 +158,13 @@ fn draw_apple(apple: &Position) -> Result<(), JsValue> {
 fn clear(rect: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
     context.clear_rect(rect.x, rect.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
+    Ok(())
+}
+
+fn write_on_canvas(text: &str) -> Result<(), JsValue> {
+    let context = get_canvas_context()?;
+    context.set_font("30px monospace");
+    context.set_fill_style(&"blue".into());
+    context.fill_text(text, 10.0, 100.0)?;
     Ok(())
 }
