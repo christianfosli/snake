@@ -125,8 +125,8 @@ pub struct Position {
 
 impl Position {
     fn random() -> Position {
-        let mut x = (rand::random::<f64>() * WIDTH as f64).round();
-        let mut y = (rand::random::<f64>() * HEIGHT as f64).round();
+        let mut x = (rand::random::<f64>() * WIDTH as f64).floor();
+        let mut y = (rand::random::<f64>() * HEIGHT as f64).floor();
         // we substract val % LINE_THICKNESS so the snake can get here
         x -= x % LINE_THICKNESS;
         y -= y % LINE_THICKNESS;
