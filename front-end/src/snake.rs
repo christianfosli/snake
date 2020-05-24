@@ -106,6 +106,17 @@ pub enum Direction {
     Left,
 }
 
+impl Direction {
+    pub fn turn_180_degrees(&self) -> Direction {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Right => Direction::Left,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Position {
     pub x: f64,
@@ -260,5 +271,10 @@ mod tests {
         let (snake, _) = snake.move_along();
 
         assert_eq!(1, snake.apple_count());
+    }
+
+    #[test]
+    fn turn_180_degrees() {
+        assert_eq!(Direction::Up, Direction::Down.turn_180_degrees());
     }
 }
