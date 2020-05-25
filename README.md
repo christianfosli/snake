@@ -9,7 +9,7 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 
 ## Architecture 🏗
 
-The system consists of 3 parts, which are all defined in this repository:
+The system consists of 3 parts, which are all defined in this repository.
 
  * Front-end application where snake is implemented with rust/webassembly
 
@@ -18,6 +18,8 @@ The system consists of 3 parts, which are all defined in this repository:
  * MS SQL Server database
 
  ![architecture diagram](./architecture.svg)
+
+We use a server-less approach, where the majority of the code is front-end.
 
 ## Development 🐳
 
@@ -42,6 +44,10 @@ as these are mounted as volumes in the container.
 ```console
 docker-compose build
 ```
+
+Parcel sometimes fails to notice that Rust/wasm has changed, and therefore
+doesn't rebuild. Just run `npm start` again to force it.
+This can be done by stopping and starting the docker container.
 
 ---
 
