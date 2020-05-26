@@ -3,12 +3,14 @@ from sys.databases
 where name = N'snake-hs')
 create database [snake-hs];
 
+GO
+
 use [snake-hs];
 
 if not exists (select *
 from sysobjects
 where id = object_id(N'[dbo].[highscores]') and objectproperty(id, N'IsUserTable') = 1)
-create table [dbo].[highscores]
+create table [snake-hs].[dbo].[highscores]
 (
     [UserName] [nvarchar](100) not null,
     [Score] [int] not null,

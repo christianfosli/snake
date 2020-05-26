@@ -25,11 +25,8 @@ services:
     ports:
       - '1433:1433'
     volumes:
-      - 'sql-server-data:/var/opt/mssql'
       - './database/entrypoint.bash:/entrypoint.bash'
       - './database/init.bash:/init.bash'
       - './database/schema.sql:/schema.sql'
     command: /bin/bash /entrypoint.bash
 
-volumes:
-  sql-server-data:
