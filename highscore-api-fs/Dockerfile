@@ -1,4 +1,6 @@
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS installer-env
+ARG CRON_CLEANUP_SCHEDULE
+ENV CRON_CLEANUP_SCHEDULE $CRON_CLEANUP_SCHEDULE
 
 COPY . /src/dotnet-function-app
 RUN cd /src/dotnet-function-app && \

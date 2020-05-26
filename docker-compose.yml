@@ -17,6 +17,17 @@ services:
       - '7071:80'
     depends_on:
       - db
+  api-fs:
+    build:
+      context: highscore-api-fs
+      args:
+        CRON_CLEANUP_SCHEDULE: '*/30 * * * * *'
+    environment:
+      - CONNECTION_STRING=Server=tcp:db,1433;Database=snake-hs;User ID=sa;Password=Secret_01
+    ports:
+      - '7072:80'
+    depends_on:
+      - db
   db:
     image: mcr.microsoft.com/mssql/server:latest
     environment:

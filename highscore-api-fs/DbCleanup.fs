@@ -1,29 +1,33 @@
 namespace Company.Function
 
 open System
-open FSharp.Data.Sql
+open Dapper
 open FSharp.Data.LiteralProviders
+open Microsoft.Data.SqlClient
 open Microsoft.Azure.WebJobs
 open Microsoft.Extensions.Logging
 
 module DbCleanup =
-    let [<Literal>] dbVendor = Common.DatabaseProviderTypes.MSSQLSERVER
-    let [<Literal>] connString = Env<"CONNECTION_STRING", "Server=tcp:localhost,1433;Database=snake-hs;User ID=sa;Password=Secret_01">.Value
+    // Run every sunday unless otherwise specified AT COMPILE TIME
+    let [<Literal>] schedule = Env<"CRON_CLEANUP_SCHEDULE", "0 0 0 * * SUN">.Value
 
-    type sql = SqlDataProvider<dbVendor, connString, UseOptionTypes=true>
+    let connString = Environment.GetEnvironmentVariable "CONNECTION_STRING"
 
-    [<FunctionName("TimerTriggerCSharp")>]
-    let run([<TimerTrigger("0 * * * * *")>]myTimer: TimerInfo, log: ILogger) =
-        let msg = sprintf "Database CleanUp function triggered at: %A" DateTime.Now
-        log.LogInformation msg
+    let removeNonTopHighScores connString =
+        use conn = new SqlConnection(connString)
+        conn.Execute
+            "with ToDelete as (
+                select * from highscores
+                order by score desc
+                offset 15 rows)
+            delete from ToDelete;"
 
-        let ctx = sql.GetDataContext()
-        ctx.``Design Time Commands``.SaveContextSchema
+    [<FunctionName("CleanupHighScoresJob")>]
+    let run([<TimerTrigger(schedule)>]myTimer: TimerInfo, log: ILogger) =
+        sprintf "Database clean-up triggered at: %A" DateTime.Now
+            |> log.LogInformation
 
-        query {
-            for hs in ctx.Dbo.Highscores do
-            sortByDescending (hs.Score, hs.TimeStamp)
-            skip 15
-            select (hs)
-        } |> Seq.``delete all items from single table`` |> Async.RunSynchronously
+        removeNonTopHighScores connString
+            |> sprintf "%d rows deleted"
+            |> log.LogInformation
 
