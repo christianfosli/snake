@@ -45,7 +45,7 @@ pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
 
     let base_url = base_url();
     console::log_1(&format!("using highscore api url: {}", base_url).into());
-    let endpoint = format!("{}/api/HighScoreFetcher", base_url);
+    let endpoint = format!("{}/api/topten", base_url);
 
     let request = Request::new_with_str_and_init(&endpoint, &options)?;
 
@@ -88,7 +88,7 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
         options.mode(RequestMode::Cors);
         options.body(Some(&json.into()));
 
-        let endpoint = format!("{}/api/HighScorePoster", base_url());
+        let endpoint = format!("{}/api/submit", base_url());
 
         let request = Request::new_with_str_and_init(&endpoint, &options)?;
 
