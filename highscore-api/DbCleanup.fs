@@ -1,4 +1,4 @@
-namespace Company.Function
+namespace HighScoreApi
 
 open System
 open Dapper
@@ -7,11 +7,11 @@ open Microsoft.Data.SqlClient
 open Microsoft.Azure.WebJobs
 open Microsoft.Extensions.Logging
 
+open Common
+
 module DbCleanup =
     // Run every sunday unless otherwise specified AT COMPILE TIME
     let [<Literal>] schedule = Env<"CRON_CLEANUP_SCHEDULE", "0 0 0 * * SUN">.Value
-
-    let connString = Environment.GetEnvironmentVariable "CONNECTION_STRING"
 
     let removeNonTopHighScores connString =
         use conn = new SqlConnection(connString)
@@ -22,7 +22,7 @@ module DbCleanup =
                 offset 15 rows)
             delete from ToDelete;"
 
-    [<FunctionName("CleanupHighScoresJob")>]
+    [<FunctionName("CleanupJob")>]
     let run([<TimerTrigger(schedule)>]myTimer: TimerInfo, log: ILogger) =
         sprintf "Database clean-up triggered at: %A" DateTime.Now
             |> log.LogInformation
