@@ -22,13 +22,12 @@ module Submit =
         options.PropertyNameCaseInsensitive <- true
         JsonSerializer.Deserialize<HighScoreDto>(body, options)
 
-    let submit highscore = async {
+    let persist highscore = async {
         use conn = new SqlConnection(connString)
-        conn.ExecuteAsync(
-            "insert into [highscores](UserName, Score, TimeStamp)
-            values (@UserName, @Score, @TimeStamp)", highscore)
+        let! rows =
+            conn.ExecuteAsync("insert into [highscores](UserName, Score, TimeStamp) values (@UserName, @Score, @TimeStamp)", highscore)
             |> Async.AwaitTask
-            |> ignore
+        return rows
     }
 
     [<FunctionName("Submit")>]
@@ -46,14 +45,10 @@ module Submit =
             use stream = new StreamReader(req.Body)
             let! body = stream.ReadToEndAsync() |> Async.AwaitTask
 
-            let dto = deserialize body
-            dto
-                |> toDomain
-                |> submit
-                |> Async.StartAsTask
-                |> Async.AwaitTask
-                |> ignore
+            let highScore = deserialize body |> toDomain
 
-            log.LogInformation "Score submitted"
-            return CreatedAtRouteResult("topten", dto) :> IActionResult
+            let! rows = persist highScore
+            sprintf "%d rows affected" rows |> log.LogInformation
+
+            return OkResult() :> IActionResult
         } |> Async.StartAsTask
