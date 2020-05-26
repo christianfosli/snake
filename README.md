@@ -26,7 +26,7 @@ We use a server-less approach, where the majority of the code is front-end.
 Run all services with docker compose:
 
 ```console
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 Then open front-end at [localhost:1234](http://localhost:1234)
@@ -37,12 +37,12 @@ To stop all services and remove their containers:
 docker-compose down
 ```
 
-Changing files in front-end/src, front-end/style.css and front-end/index.html should update automatically,
-as these are mounted as volumes in the container.
-**All other changes require rebuilding the images**
+Changing rust files, style.css and index.html should update automatically,
+as these are mounted as volumes in the container (specified in docker-compose.yml).
+**All other changes require rebuilding their image**
 
 ```console
-docker-compose build
+docker-compose up -d --build <service>
 ```
 
 Parcel sometimes fails to notice that Rust/wasm has changed, and therefore
