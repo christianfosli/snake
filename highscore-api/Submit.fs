@@ -25,7 +25,9 @@ module Submit =
     let persist highscore = async {
         use conn = new SqlConnection(connString)
         let! rows =
-            conn.ExecuteAsync("insert into [highscores](UserName, Score, TimeStamp) values (@UserName, @Score, @TimeStamp)", highscore)
+            conn.ExecuteAsync(
+                "insert into [highscores](UserName, Score, TimeStamp)
+                 values (@UserName, @Score, @TimeStamp)", highscore)
             |> Async.AwaitTask
         return rows
     }
