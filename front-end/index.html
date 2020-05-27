@@ -42,7 +42,11 @@
           </button>
           <div class="break"></div>
           <button disabled>7</button>
-          <button disabled>8</button>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))"
+          >
+            8
+          </button>
           <button disabled>9</button>
         </div>
       </div>
