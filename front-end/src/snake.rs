@@ -8,7 +8,7 @@ pub const LINE_THICKNESS: f64 = 25.0;
 pub struct Snake {
     pub body: Vec<Position>,
     pub direction: Direction,
-    pub target: Position,
+    pub target: Option<Position>,
     pub alive: bool,
 }
 
@@ -17,7 +17,7 @@ impl Snake {
         Snake {
             body: vec![Position { x: 0.0, y: 0.0 }],
             direction: Direction::Right,
-            target: Position::random(),
+            target: Some(Position::random()),
             alive: true,
         }
     }
@@ -69,7 +69,7 @@ impl Snake {
         }
 
         let new_head = self.next_position();
-        let (dropped, target, body) = if new_head == self.target {
+        let (dropped, target, body) = if Some(new_head) == self.target {
             let mut body = self.body.clone();
             body.push(new_head);
             (None, Position::random_except(&body), body)
@@ -95,7 +95,7 @@ impl Snake {
             || self
                 .body
                 .iter()
-                .skip(if next_pos == self.target { 0 } else { 1 })
+                .skip(if Some(next_pos) == self.target { 0 } else { 1 })
                 .any(|p| *p == next_pos)
     }
 
@@ -142,11 +142,16 @@ impl Position {
         Position { x, y }
     }
 
-    fn random_except(blacklist: &Vec<Position>) -> Position {
+    fn random_except(blacklist: &Vec<Position>) -> Option<Position> {
+        let max_positions = WIDTH / LINE_THICKNESS as u32 * HEIGHT / LINE_THICKNESS as u32;
+        // TODO: Maybe don't do completely random when there are only a few options
+        if blacklist.len() as u32 == max_positions {
+            return None;
+        }
         loop {
             let random = Position::random();
             if blacklist.iter().all(|p| *p != random) {
-                return random;
+                return Some(random);
             }
         }
     }
@@ -245,7 +250,7 @@ mod tests {
     #[test]
     fn it_moves_its_tail_when_moving() {
         let snake = Snake {
-            target: Position { x: 100.0, y: 100.0 },
+            target: Some(Position { x: 100.0, y: 100.0 }),
             ..Snake::new()
         };
         let original_tail = *snake.tail();
@@ -260,10 +265,10 @@ mod tests {
     fn it_keeps_its_tail_and_gets_longer_when_eating_apple() {
         let snake = Snake {
             direction: Direction::Right,
-            target: Position {
+            target: Some(Position {
                 x: LINE_THICKNESS,
                 y: 0.0,
-            },
+            }),
             ..Snake::new()
         };
         let original_tail = *snake.tail();
@@ -316,15 +321,33 @@ mod tests {
     fn apple_count_should_increase_when_eating_apple() {
         let snake = Snake {
             direction: Direction::Right,
-            target: Position {
+            target: Some(Position {
                 x: LINE_THICKNESS,
                 y: 0.0,
-            },
+            }),
             ..Snake::new()
         };
         let (snake, _) = snake.move_along();
 
         assert_eq!(1, snake.apple_count());
+    }
+
+    #[test]
+    fn it_should_be_possible_to_fill_the_whole_screen_with_snake() {
+        let mut snake = Snake::new();
+        let bodies_per_line = WIDTH / LINE_THICKNESS as u32;
+        let max_length = bodies_per_line.pow(2);
+        for _ in 0..max_length {
+            snake.direction = match snake.direction {
+                Direction::Down if snake.head().x == 0.0 => Direction::Right,
+                Direction::Down => Direction::Left,
+                _ if snake.next_position().is_inside_walls() => snake.direction,
+                _ => Direction::Down,
+            };
+            snake.target = Some(snake.next_position());
+            snake = snake.move_along().0;
+        }
+        assert_eq!(max_length, snake.body.len() as u32);
     }
 
     #[test]
