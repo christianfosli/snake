@@ -26,7 +26,7 @@ module Submit =
         use conn = new SqlConnection(connString)
         let! rows =
             conn.ExecuteAsync(
-                "insert into [highscores](UserName, Score, TimeStamp)
+                "insert into [highscores]([UserName], [Score], [TimeStamp])
                  values (@UserName, @Score, @TimeStamp)", highscore)
             |> Async.AwaitTask
         return rows
