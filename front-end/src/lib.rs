@@ -77,7 +77,7 @@ pub fn run() -> Result<(), JsValue> {
         match old_tail {
             Some(tail) => clear(&tail).unwrap(),
             None if snake.target.is_some() => draw_apple(&snake.target.unwrap()).unwrap(),
-            None => write_on_canvas("You won the game!!💯", 8).unwrap(),
+            None => write_on_canvas("💯 u crazy!! 💯", 8).unwrap(),
         }
         draw_snake(&snake).unwrap();
     })
