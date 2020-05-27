@@ -30,7 +30,7 @@ pub fn run() -> Result<(), JsValue> {
 
     let snake = Snake::new();
     draw_snake(&snake)?;
-    draw_apple(&snake.target)?;
+    draw_apple(&snake.target.unwrap())?;
 
     let direction_ptr = Arc::new(Mutex::new(snake.direction));
     let direction_ptr_2 = Arc::clone(&direction_ptr);
@@ -76,7 +76,8 @@ pub fn run() -> Result<(), JsValue> {
 
         match old_tail {
             Some(tail) => clear(&tail).unwrap(),
-            None => draw_apple(&snake.target).unwrap(),
+            None if snake.target.is_some() => draw_apple(&snake.target.unwrap()).unwrap(),
+            None => write_on_canvas("💯 u crazy!! 💯", 8).unwrap(),
         }
         draw_snake(&snake).unwrap();
     })
@@ -90,14 +91,17 @@ async fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
         .unwrap()
         .clear_interval_with_handle(interval_handle);
 
-    write_on_canvas(&format!(
-        "score: {} {}",
-        snake.apple_count(),
-        match snake.apple_count() {
-            1 => "apple",
-            _ => "apples",
-        }
-    ))?;
+    write_on_canvas(
+        &format!(
+            "score: {} {}",
+            snake.apple_count(),
+            match snake.apple_count() {
+                1 => "apple",
+                _ => "apples",
+            }
+        ),
+        4,
+    )?;
 
     check_and_submit_highscore(snake.apple_count()).await?;
 
@@ -175,10 +179,10 @@ fn clear(rect: &Position) -> Result<(), JsValue> {
     Ok(())
 }
 
-fn write_on_canvas(text: &str) -> Result<(), JsValue> {
+fn write_on_canvas(text: &str, row: u8) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
     context.set_font("30px monospace");
     context.set_fill_style(&"blue".into());
-    context.fill_text(text, 10.0, 100.0)?;
+    context.fill_text(text, 10.0, row as f64 * snake::LINE_THICKNESS)?;
     Ok(())
 }
