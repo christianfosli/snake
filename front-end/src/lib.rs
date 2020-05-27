@@ -74,11 +74,11 @@ pub fn run() -> Result<(), JsValue> {
             return;
         }
 
-        draw_snake(&snake).unwrap();
         match old_tail {
             Some(tail) => clear(&tail).unwrap(),
             None => draw_apple(&snake.target).unwrap(),
         }
+        draw_snake(&snake).unwrap();
     })
     .forget();
 
@@ -140,10 +140,18 @@ fn get_canvas_context() -> Result<CanvasRenderingContext2d, JsValue> {
 
 fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
-    context.set_fill_style(&JsValue::from_str("#bada55"));
-    for pos in snake.body.iter() {
-        context.fill_rect(pos.x, pos.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
-    }
+    context.set_fill_style(&JsValue::from_str("#abba00"));
+    context.fill_rect(
+        snake.head().x,
+        snake.head().y,
+        snake::LINE_THICKNESS,
+        snake::LINE_THICKNESS,
+    );
+    snake.body.iter().rev().skip(1).next().and_then(|next| {
+        context.set_fill_style(&JsValue::from_str("#bada55"));
+        context.fill_rect(next.x, next.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
+        Some(next)
+    });
     Ok(())
 }
 

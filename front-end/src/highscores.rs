@@ -5,6 +5,22 @@ use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{console, HtmlElement, Request, RequestInit, RequestMode, Response};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct HighScore {
+    #[serde(rename = "userName")]
+    user_name: String,
+    score: usize,
+}
+
+impl HighScore {
+    fn to_table_row(&self) -> String {
+        format!(
+            "<tr><td>{}</td><td>{}</td></tr>",
+            self.user_name, self.score
+        )
+    }
+}
+
 #[wasm_bindgen(
     inline_js = "export function base_url() { return process.env.HIGHSCORE_API_BASE_URL; }"
 )]
@@ -28,7 +44,7 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
     let html = match highscores {
         Ok(highscores) => highscores
             .iter()
-            .map(|h| h.to_html_row())
+            .map(|h| h.to_table_row())
             .collect::<String>(),
         Err(_) => String::from("<tr><td colspan=\"2\">Failed to fetch :-(</td></tr>"),
     };
@@ -67,7 +83,7 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
     if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
         console::log_1(&format!("Score {} is a highscore!", score).into());
         let window = web_sys::window().unwrap();
-        let name =
+        let user_name =
             match window.prompt_with_message("Please enter your name for the highscore table")? {
                 Some(v) => v,
                 None => {
@@ -76,21 +92,15 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
                 }
             };
 
-        let new_highscore = HighScore {
-            userName: name,
-            score,
-        };
-
-        let json = serde_json::to_string(&new_highscore).unwrap();
+        let json = serde_json::to_string(&HighScore { user_name, score }).unwrap();
 
         let mut options = RequestInit::new();
         options.method("POST");
         options.mode(RequestMode::Cors);
         options.body(Some(&json.into()));
 
-        let endpoint = format!("{}/api/submit", base_url());
-
-        let request = Request::new_with_str_and_init(&endpoint, &options)?;
+        let request =
+            Request::new_with_str_and_init(&format!("{}/api/submit", base_url()), &options)?;
 
         request.headers().set("Accept", "application/json")?;
         request.headers().set("Content-Type", "text/plain")?;
@@ -112,30 +122,33 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
     Ok(())
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[allow(non_snake_case)] // weird capitalization to match js conventions
-pub struct HighScore {
-    userName: String,
-    score: usize,
-}
-
-impl HighScore {
-    fn to_html_row(&self) -> String {
-        format!("<tr><td>{}</td><td>{}</td></tr>", self.userName, self.score)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn to_html_row_should_include_username() {
-        let score = HighScore {
-            userName: String::from("testuser"),
+    fn to_table_row_should_include_username() {
+        let highscore = HighScore {
+            user_name: String::from("testuser"),
             score: 0,
         };
 
-        assert!(score.to_html_row().find(&score.userName).is_some());
+        assert!(highscore
+            .to_table_row()
+            .find(&highscore.user_name)
+            .is_some());
+    }
+
+    #[test]
+    fn to_table_row_should_include_score() {
+        let highscore = HighScore {
+            user_name: String::from("testuser"),
+            score: 5,
+        };
+
+        assert!(highscore
+            .to_table_row()
+            .find(&highscore.score.to_string())
+            .is_some())
     }
 }

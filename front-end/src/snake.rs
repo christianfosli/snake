@@ -4,7 +4,7 @@ pub const WIDTH: u32 = 300;
 pub const HEIGHT: u32 = 300;
 pub const LINE_THICKNESS: f64 = 25.0;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Snake {
     pub body: Vec<Position>,
     pub direction: Direction,
@@ -61,21 +61,14 @@ impl Snake {
     }
 
     pub fn move_along(&self) -> (Snake, Option<Position>) {
-        let new_head = self.next_position();
-        let alive =
-            self.alive && new_head.is_inside_walls() && !self.body.iter().any(|p| *p == new_head);
-
         if !self.alive {
-            return (
-                Snake {
-                    body: self.body.clone(),
-                    alive,
-                    ..*self
-                },
-                None,
-            );
+            return (self.clone(), None);
+        }
+        if self.dying() {
+            return (self.kill(), None);
         }
 
+        let new_head = self.next_position();
         let (dropped, target, body) = if new_head == self.target {
             let mut body = self.body.clone();
             body.push(new_head);
@@ -90,11 +83,27 @@ impl Snake {
             Snake {
                 body,
                 target,
-                alive,
                 ..*self
             },
             dropped,
         )
+    }
+
+    fn dying(&self) -> bool {
+        let next_pos = self.next_position();
+        !next_pos.is_inside_walls()
+            || self
+                .body
+                .iter()
+                .skip(if next_pos == self.target { 0 } else { 1 })
+                .any(|p| *p == next_pos)
+    }
+
+    fn kill(&self) -> Snake {
+        Snake {
+            alive: false,
+            ..self.clone()
+        }
     }
 }
 
@@ -167,7 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn next_position_is_thickness_away_from_head() {
+    fn its_next_position_is_thickness_away_from_head() {
         let snake = Snake::new();
         let head = snake.head();
 
@@ -180,12 +189,57 @@ mod tests {
     fn it_dies_when_crashing_into_wall() {
         let snake = Snake {
             direction: Direction::Left,
+            body: vec![Position { x: 0.0, y: 0.0 }],
             ..Snake::new()
         };
 
+        assert!(snake.dying());
         let (snake, _) = snake.move_along();
-
         assert_eq!(false, snake.alive);
+    }
+
+    #[test]
+    fn it_dies_when_crashing_into_self() {
+        let snake = Snake {
+            body: vec![
+                Position { x: 0.0, y: 0.0 },
+                Position { x: 25.0, y: 0.0 },
+                Position { x: 50.0, y: 0.0 },
+                Position { x: 50.0, y: 25.0 },
+                Position { x: 25.0, y: 25.0 },
+            ],
+            direction: Direction::Up,
+            ..Snake::new()
+        };
+
+        assert!(snake.dying());
+        let (snake, _) = snake.move_along();
+        assert_eq!(false, snake.alive)
+    }
+
+    #[test]
+    fn it_lives_when_moving_its_head_to_where_its_tail_was() {
+        let snake = Snake {
+            body: vec![
+                Position { x: 0.0, y: 0.0 },
+                Position { x: 25.0, y: 0.0 },
+                Position { x: 25.0, y: 25.0 },
+                Position { x: 0.0, y: 25.0 },
+            ],
+            target: Position::random_except(&vec![Position { x: 0.0, y: 0.0 }]),
+            direction: Direction::Up,
+            ..Snake::new()
+        };
+
+        assert_eq!(false, snake.dying());
+        let (snake, _) = snake.move_along();
+        assert!(snake.alive)
+    }
+
+    #[test]
+    fn it_dies_when_killed() {
+        let snake = Snake::new();
+        assert_eq!(false, snake.kill().alive);
     }
 
     #[test]
@@ -221,7 +275,7 @@ mod tests {
     }
 
     #[test]
-    fn is_inside_walls_should_be_true() {
+    fn position_is_inside_walls_should_be_true() {
         assert!(Position { x: 0.0, y: 0.0 }.is_inside_walls());
         assert!(Position { x: 50.0, y: 50.0 }.is_inside_walls());
         assert!(Position {
@@ -232,7 +286,7 @@ mod tests {
     }
 
     #[test]
-    fn is_inside_walls_should_be_false() {
+    fn position_is_inside_walls_should_be_false() {
         assert_eq!(false, Position { x: -25.0, y: 0.0 }.is_inside_walls());
         assert_eq!(
             false,
@@ -274,7 +328,7 @@ mod tests {
     }
 
     #[test]
-    fn turn_180_degrees() {
+    fn direction_turn_180_degrees_given_up_should_be_down() {
         assert_eq!(Direction::Up, Direction::Down.turn_180_degrees());
     }
 }
