@@ -18,7 +18,7 @@ module TopTen =
         let! result =
             conn.QueryAsync<HighScoreDto>
                 "select top(10) [UserName],[Score]
-                 from [HighScores]
+                 from [highscores]
                  order by [Score] desc, [TimeStamp] asc"
             |> Async.AwaitTask
         return result

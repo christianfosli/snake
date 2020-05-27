@@ -17,8 +17,8 @@ module DbCleanup =
         use conn = new SqlConnection(connString)
         conn.Execute
             "with ToDelete as (
-                select * from highscores
-                order by score desc
+                select * from [highscores]
+                order by [Score] desc, [TimeStamp] asc
                 offset 15 rows)
             delete from ToDelete;"
 
