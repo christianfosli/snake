@@ -51,4 +51,4 @@ jobs:
       - uses: azure/functions-action@v1
         with:
           app-name: visnakehighscores
-          package: highscore-api/output
+          package: highscore-api/HighScoreApi/output
