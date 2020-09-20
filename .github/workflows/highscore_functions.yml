@@ -20,11 +20,15 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.100'
+          dotnet-version: '3.1.x'
       - name: Run dotnet build
         run: |
-          cd highscore-api
-          dotnet build --configuration Release --output ./output
+          cd highscore-api/HighScoreApi
+          dotnet build
+      - name: Run dotnet test
+        run: |
+          cd highscore-api/HighScoreApi.Tests
+          dotnet test
   build-and-deploy:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
@@ -32,11 +36,15 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.100'
+          dotnet-version: '3.1.x'
       - name: Run dotnet build
         run: |
-          cd highscore-api
+          cd highscore-api/HighScoreApi
           dotnet build --configuration Release --output ./output
+      - name: Run dotnet test
+        run: |
+          cd highscore-api/HighScoreApi.Tests
+          dotnet test
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}

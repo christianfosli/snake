@@ -13,7 +13,7 @@ services:
       - './front-end/style.css:/usr/src/app/style.css'
   api:
     build:
-      context: highscore-api
+      context: highscore-api/HighScoreApi
       args:
         CRON_CLEANUP_SCHEDULE: '0 * * * * *'
     environment:
