@@ -1,9 +1,10 @@
 use serde::{Deserialize, Serialize};
 use serde_json;
-use wasm_bindgen::prelude::*;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{console, HtmlElement, Request, RequestInit, RequestMode, Response};
+
+const BASE_URL: Option<&'static str> = option_env!("HIGHSCORE_API_BASE_URL");
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HighScore {
@@ -19,13 +20,6 @@ impl HighScore {
             self.user_name, self.score
         )
     }
-}
-
-#[wasm_bindgen(
-    inline_js = "export function base_url() { return process.env.HIGHSCORE_API_BASE_URL; }"
-)]
-extern "C" {
-    fn base_url() -> String;
 }
 
 pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
@@ -59,8 +53,12 @@ pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     options.method("GET");
     options.mode(RequestMode::Cors);
 
-    let base_url = base_url();
+    let base_url = match BASE_URL {
+        Some(url) => Ok(url),
+        None => Err(JsValue::from_str("Baseurl is undefined")),
+    }?;
     console::log_1(&format!("using highscore api url: {}", base_url).into());
+
     let endpoint = format!("{}/api/topten", base_url);
 
     let request = Request::new_with_str_and_init(&endpoint, &options)?;
@@ -100,7 +98,7 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
         options.body(Some(&json.into()));
 
         let request =
-            Request::new_with_str_and_init(&format!("{}/api/submit", base_url()), &options)?;
+            Request::new_with_str_and_init(&format!("{}/api/submit", BASE_URL.unwrap()), &options)?;
 
         request.headers().set("Accept", "application/json")?;
         request.headers().set("Content-Type", "text/plain")?;

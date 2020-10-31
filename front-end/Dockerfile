@@ -1,18 +1,18 @@
-FROM node:lts
+FROM rust:1.46
 
-RUN curl https://sh.rustup.rs -sSf | sh -s --  --default-toolchain stable -y
-ENV PATH="/root/.cargo/bin:$PATH"
-
-RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+RUN curl --fail https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+RUN curl --fail --location \
+  https://github.com/svenstaro/miniserve/releases/download/v0.10.0/miniserve-v0.10.0-linux-x86_64 \
+  -o /usr/bin/miniserve && chmod +x /usr/bin/miniserve
 
 WORKDIR /usr/src/app
 
-ENV NODE_ENV=development
-COPY package*.json ./
-RUN npm install
-
 COPY . .
 
-EXPOSE 1234
+ARG HIGHSCORE_API_BASE_URL=https://visnakehighscores.azurewebsites.net
+ENV HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL
+ARG BUILD_PROFILE=release
 
-CMD ["npm", "start"]
+RUN wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm --out-dir static
+
+CMD ["miniserve", "./static", "--index", "index.html"]

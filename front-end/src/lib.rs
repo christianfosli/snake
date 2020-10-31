@@ -19,7 +19,7 @@ mod highscores;
 use crate::highscores::*;
 
 // Called by our JS entry point
-#[wasm_bindgen]
+#[wasm_bindgen(start)]
 pub fn run() -> Result<(), JsValue> {
     spawn_local(async {
         fetch_and_set_highscores()

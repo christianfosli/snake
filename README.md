@@ -29,37 +29,13 @@ Run all services with docker compose:
 docker-compose up -d --build
 ```
 
-Then open front-end at [localhost:1234](http://localhost:1234)
+Then open front-end at [localhost:8080](http://localhost:8080)
 
 To stop all services and remove their containers:
 
 ```console
 docker-compose down
 ```
-
-Changing rust files, style.css and index.html should update automatically,
-as these are mounted as volumes in the container (specified in docker-compose.yml).
-**All other changes require rebuilding their image**
-
-```console
-docker-compose up -d --build <service>
-```
-
-Parcel sometimes fails to notice that Rust/wasm has changed, and therefore
-doesn't rebuild. Just run `npm start` again to force it.
-This can be done by stopping and starting the docker container.
-
----
-
-**The front-end is based on [rust-parcel-template](https://github.com/rustwasm/rust-parcel-template)**
-
-### More useful commands for front-end:
-
-* `npm run build` -- Bundle the project (in production mode)
-
-* `cargo test` -- Run rust unit tests
-
-* `wasm-pack test --chrome` -- Run `#[wasm_bindgen_test]` tests in chrome
 
 ### Required Tools
 
