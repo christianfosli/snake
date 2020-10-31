@@ -67,3 +67,6 @@ jobs:
 
       - name: Upload to azure storage
         run: az storage blob upload-batch --account-name 'visnake' --destination '$web' --source 'dist' --auth-mode 'login'
+
+      - name: Purge CDN
+        run: az cdn endpoint purge --content-paths '/*' --name visnake --profile-name visnake --resource-group visnake
