@@ -2,15 +2,18 @@ version: '3'
 
 services:
   app:
-    build: front-end
+    build:
+      context: ./front-end
+      args:
+        BUILD_PROFILE: dev
+        HIGHSCORE_API_BASE_URL: http://localhost:7071
     ports:
-      - '1234:1234'
+      - '8080:8080'
     volumes:
       - './front-end/Cargo.toml:/usr/src/app/Cargo.toml'
       - './front-end/Cargo.lock:/usr/src/app/Cargo.lock'
       - './front-end/src:/usr/src/app/src'
-      - './front-end/index.html:/usr/src/app/index.html'
-      - './front-end/style.css:/usr/src/app/style.css'
+      - './front-end/static:/usr/src/app/static'
   api:
     build:
       context: highscore-api/HighScoreApi

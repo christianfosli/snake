@@ -42,21 +42,8 @@ jobs:
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1.0.5
-        with:
-          toolchain: stable
-      - uses: actions/setup-node@v1.1.0
-        with:
-          version: 12.x
-
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Install javascript dependencies
-        run: npm install
-
       - name: Build
-        run: npm run build
+        run: docker build --build-arg BUILD_PROFILE=dev .
 
   build-and-deploy:
     if: github.event_name == 'push'
@@ -65,24 +52,15 @@ jobs:
       NODE_ENV: test
     steps:
       - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1.0.5
-        with:
-          toolchain: stable
-      - uses: actions/setup-node@v1.1.0
-        with:
-          version: 12.x
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-
-      - name: Install javascript dependencies
-        run: npm install
-
-      - name: Build
-        run: npm run build
+      - name: Build and Copy Artifacts
+        run: |
+          docker build -t snake-frontend:latest .
+          container="$(docker create snake-frontend:latest)"
+          docker cp "$container:/usr/src/app/static" dist
 
       - name: Clear azure storage container
         run: az storage blob delete-batch --account-name 'visnake' --source '$web' --auth-mode 'login'
