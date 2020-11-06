@@ -34,10 +34,8 @@ pub fn run() -> Result<(), JsValue> {
             .unwrap_or_else(|err| console::error_1(&err.into()))
     });
     add_canvas()?;
-    write_on_canvas("Press <space>", 2)?;
-    write_on_canvas("to begin", 3)?;
-    write_on_canvas("Press <?>", 9)?;
-    write_on_canvas("for help", 10)?;
+    write_on_canvas("Press <space>", 3)?;
+    write_on_canvas("to begin", 4)?;
 
     let snake = Snake::new();
 
@@ -140,9 +138,6 @@ async fn game_over(snake: &Snake) -> Result<(), JsValue> {
         ),
         4,
     )?;
-
-    write_on_canvas("Press <space>", 8)?;
-    write_on_canvas("to play again", 9)?;
 
     check_and_submit_highscore(snake.apple_count()).await?;
 

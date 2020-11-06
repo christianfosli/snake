@@ -47,6 +47,26 @@ footer {
   flex-wrap: wrap;
 }
 
+.keyboard button:first-child, .keyboard button:nth-child(2), .keyboard button:nth-child(3) {
+  height: 2rem;
+  margin: 0.8rem;
+  font-size: 0.8rem;
+}
+
+.keyboard button:first-child {
+  transform: rotate(7deg);
+  background-image: linear-gradient(#ffffff, #bada55);
+}
+
+.keyboard button:nth-child(2) {
+  transform: translateY(0.25rem);
+}
+
+.keyboard button:nth-child(3) {
+  transform: rotate(-7deg);
+  background-image: linear-gradient(#ffffff, #ffaabb);
+}
+
 .keyboard button {
   flex-grow: 1;
   height: 2.5rem;
