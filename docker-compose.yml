@@ -9,11 +9,6 @@ services:
         HIGHSCORE_API_BASE_URL: http://localhost:7071
     ports:
       - '8080:8080'
-    volumes:
-      - './front-end/Cargo.toml:/usr/src/app/Cargo.toml'
-      - './front-end/Cargo.lock:/usr/src/app/Cargo.lock'
-      - './front-end/src:/usr/src/app/src'
-      - './front-end/static:/usr/src/app/static'
   api:
     build:
       context: highscore-api/HighScoreApi
