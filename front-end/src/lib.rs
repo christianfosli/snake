@@ -18,6 +18,13 @@ use crate::vi::*;
 mod highscores;
 use crate::highscores::*;
 
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum GameStatus {
+    NotStarted,
+    Playing,
+    GameOver,
+}
+
 // Called by our JS entry point
 #[wasm_bindgen(start)]
 pub fn run() -> Result<(), JsValue> {
@@ -27,47 +34,82 @@ pub fn run() -> Result<(), JsValue> {
             .unwrap_or_else(|err| console::error_1(&err.into()))
     });
     add_canvas()?;
+    write_on_canvas("Press <space>", 2)?;
+    write_on_canvas("to begin", 3)?;
+    write_on_canvas("Press <?>", 9)?;
+    write_on_canvas("for help", 10)?;
 
     let snake = Snake::new();
-    draw_snake(&snake)?;
-    draw_apple(&snake.target.unwrap())?;
 
+    let game_status_ptr = Arc::new(Mutex::new(GameStatus::NotStarted));
+    let game_status_ptr_2 = Arc::clone(&game_status_ptr);
     let direction_ptr = Arc::new(Mutex::new(snake.direction));
     let direction_ptr_2 = Arc::clone(&direction_ptr);
     let snake_ptr = Arc::new(Mutex::new(snake));
     let snake_ptr_2 = Arc::clone(&snake_ptr);
-    let interval_ptr = Arc::new(Mutex::new(0));
-    let interval_ptr_2 = Arc::clone(&interval_ptr);
 
     let keylistener = async move {
         let document = web_sys::window().unwrap().document().unwrap();
         let mut vi = Vi::new(&document);
 
-        while let Some(new_dir) = vi.next().await {
-            let snake = snake_ptr_2.lock().unwrap();
-            if snake.apple_count() == 0 || new_dir != snake.direction.turn_180_degrees() {
-                *direction_ptr_2.lock().unwrap() = new_dir;
+        while let Some(cmd) = vi.next().await {
+            let mut snake = snake_ptr_2.lock().unwrap();
+            match cmd {
+                ViCommand::Start => {
+                    let mut game_status = game_status_ptr.lock().unwrap();
+                    if *game_status == GameStatus::GameOver {
+                        *snake = Snake::new();
+                        *direction_ptr_2.lock().unwrap() = snake.direction;
+                    }
+                    *game_status = GameStatus::Playing;
+                    clear_screen().unwrap();
+                    draw_snake(&snake).unwrap();
+                    draw_apple(&snake.target.unwrap()).unwrap();
+                }
+                ViCommand::Stop if *game_status_ptr.lock().unwrap() == GameStatus::Playing => {
+                    *snake = snake.kill();
+                }
+                ViCommand::Help => {
+                    clear_screen().unwrap();
+                    write_on_canvas("Navigate:", 2).unwrap();
+                    write_on_canvas("hjkl, ⬅⬇⬆️️➡️️, or", 3).unwrap();
+                    write_on_canvas("the numpad below", 4).unwrap();
+                    write_on_canvas("start with", 6).unwrap();
+                    write_on_canvas("<space>", 7).unwrap();
+                    write_on_canvas("quit with <q>", 9).unwrap();
+                }
+                ViCommand::Move(dir)
+                    if snake.apple_count() == 0 || dir != snake.direction.turn_180_degrees() =>
+                {
+                    *direction_ptr_2.lock().unwrap() = dir;
+                }
+                _ => {}
             }
         }
     };
 
     spawn_local(keylistener);
 
-    *interval_ptr.lock().unwrap() = Interval::new(300, move || {
+    Interval::new(300, move || {
+        let mut game_status = game_status_ptr_2.lock().unwrap();
+        if *game_status != GameStatus::Playing {
+            return;
+        }
+
         let mut snake = snake_ptr.lock().unwrap();
         snake.direction = *direction_ptr.lock().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
         *snake = moved_snake;
 
         if !snake.alive {
-            let interval_handle = *interval_ptr_2.lock().unwrap();
             let dead_snake = Snake {
                 // just creating a copy so we can move it into async fn
                 body: snake.body.clone(),
                 ..*snake
             };
+            *game_status = GameStatus::GameOver;
             spawn_local(async move {
-                game_over(&dead_snake, interval_handle)
+                game_over(&dead_snake)
                     .await
                     .unwrap_or_else(|err| console::error_1(&err.into()));
             });
@@ -86,11 +128,7 @@ pub fn run() -> Result<(), JsValue> {
     Ok(())
 }
 
-async fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
-    web_sys::window()
-        .unwrap()
-        .clear_interval_with_handle(interval_handle);
-
+async fn game_over(snake: &Snake) -> Result<(), JsValue> {
     write_on_canvas(
         &format!(
             "score: {} {}",
@@ -102,6 +140,9 @@ async fn game_over(snake: &Snake, interval_handle: i32) -> Result<(), JsValue> {
         ),
         4,
     )?;
+
+    write_on_canvas("Press <space>", 8)?;
+    write_on_canvas("to play again", 9)?;
 
     check_and_submit_highscore(snake.apple_count()).await?;
 
@@ -176,6 +217,12 @@ fn draw_apple(apple: &Position) -> Result<(), JsValue> {
 fn clear(rect: &Position) -> Result<(), JsValue> {
     let context = get_canvas_context()?;
     context.clear_rect(rect.x, rect.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
+    Ok(())
+}
+
+fn clear_screen() -> Result<(), JsValue> {
+    let context = get_canvas_context()?;
+    context.clear_rect(0.0, 0.0, snake::WIDTH as f64, snake::HEIGHT as f64);
     Ok(())
 }
 

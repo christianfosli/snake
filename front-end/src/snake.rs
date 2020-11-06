@@ -99,7 +99,7 @@ impl Snake {
                 .any(|p| *p == next_pos)
     }
 
-    fn kill(&self) -> Snake {
+    pub fn kill(&self) -> Snake {
         Snake {
             alive: false,
             ..self.clone()
