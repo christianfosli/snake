@@ -8,8 +8,15 @@ use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, KeyboardEvent};
 
 pub struct Vi {
-    pub receiver: mpsc::UnboundedReceiver<Direction>,
+    pub receiver: mpsc::UnboundedReceiver<ViCommand>,
     pub listener: EventListener,
+}
+
+pub enum ViCommand {
+    Start,
+    Stop,
+    Help,
+    Move(Direction),
 }
 
 impl Vi {
@@ -18,11 +25,14 @@ impl Vi {
         let listener = EventListener::new(&target, "keydown", move |event| {
             let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
             let key: &str = &event.key();
-            let dir: Option<Direction> = match key {
-                "h" | "ArrowLeft" => Some(Direction::Left),
-                "j" | "ArrowDown" => Some(Direction::Down),
-                "k" | "ArrowUp" => Some(Direction::Up),
-                "l" | "ArrowRight" => Some(Direction::Right),
+            let dir: Option<ViCommand> = match key {
+                "h" | "ArrowLeft" => Some(ViCommand::Move(Direction::Left)),
+                "j" | "ArrowDown" => Some(ViCommand::Move(Direction::Down)),
+                "k" | "ArrowUp" => Some(ViCommand::Move(Direction::Up)),
+                "l" | "ArrowRight" => Some(ViCommand::Move(Direction::Right)),
+                " " => Some(ViCommand::Start),
+                "q" => Some(ViCommand::Stop),
+                "?" => Some(ViCommand::Help),
                 _ => None,
             };
             match dir {
@@ -36,7 +46,7 @@ impl Vi {
 }
 
 impl Stream for Vi {
-    type Item = Direction;
+    type Item = ViCommand;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         Pin::new(&mut self.receiver).poll_next(cx)
