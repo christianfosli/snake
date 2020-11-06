@@ -12,6 +12,7 @@
       init();
     </script>
   </head>
+
   <body>
     <header>
       <h1>snake with vim keys</h1>
@@ -20,6 +21,22 @@
       <div id="phone">
         <!--canvas to be added by js-->
         <div class="keyboard">
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'Space', key: ' '}))"
+          >
+            START
+          </button>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'Slash', key: '?'}))"
+          >
+            ?
+          </button>
+          <button
+            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyQ', key: 'q'}))"
+          >
+            STOP
+          </button>
+          <div class="break"></div>
           <button disabled>1</button>
           <button
             onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyK', key: 'k'}));"
