@@ -18,7 +18,7 @@
       <h1>snake with vim keys</h1>
     </header>
     <main>
-      <div id="phone">
+      <div id="phone" aria-label="phone">
         <!--canvas to be added by js-->
         <div class="keyboard">
           <button
@@ -118,16 +118,18 @@
       </p>
     </div>
     <footer>
-      Christian Fosli | Written in
-      <a href="https://www.rust-lang.org">Rust</a> and compiled to Web Assembly
-      | Source code on
-      <a href="https://github.com/christianfosli/snake">GitHub</a>
-      |
-      <button
-        onclick="document.getElementById('privacy-policy').classList.toggle('d-none')"
-      >
-        Privacy
-      </button>
+      <p>
+        Christian Fosli | Written in
+        <a href="https://www.rust-lang.org">Rust</a> and compiled to Web
+        Assembly | Source code on
+        <a href="https://github.com/christianfosli/snake">GitHub</a>
+        |
+        <button
+          onclick="document.getElementById('privacy-policy').classList.toggle('d-none')"
+        >
+          Privacy
+        </button>
+      </p>
     </footer>
   </body>
 </html>
