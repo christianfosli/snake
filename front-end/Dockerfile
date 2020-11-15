@@ -1,4 +1,4 @@
-FROM rust:1.46
+FROM rust:1.47
 
 RUN curl --fail https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 RUN curl --fail --location \
