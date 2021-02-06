@@ -35,9 +35,9 @@ impl Vi {
                 "?" => Some(ViCommand::Help),
                 _ => None,
             };
-            match dir {
-                Some(dir) => sender.unbounded_send(dir).unwrap(),
-                None => (),
+
+            if let Some(dir) = dir {
+                sender.unbounded_send(dir).unwrap()
             };
         });
 

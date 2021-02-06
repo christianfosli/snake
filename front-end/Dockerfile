@@ -1,8 +1,8 @@
-FROM rust:1.47
+FROM rust:1.49
 
 RUN curl --fail https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 RUN curl --fail --location \
-  https://github.com/svenstaro/miniserve/releases/download/v0.10.0/miniserve-v0.10.0-linux-x86_64 \
+  https://github.com/svenstaro/miniserve/releases/download/v0.10.4/miniserve-v0.10.4-linux-x86_64 \
   -o /usr/bin/miniserve && chmod +x /usr/bin/miniserve
 
 WORKDIR /usr/src/app

@@ -31,7 +31,7 @@ pub fn run() -> Result<(), JsValue> {
     spawn_local(async {
         fetch_and_set_highscores()
             .await
-            .unwrap_or_else(|err| console::error_1(&err.into()))
+            .unwrap_or_else(|err| console::error_1(&err))
     });
     add_canvas()?;
     write_on_canvas("Press <space>", 3)?;
@@ -109,7 +109,7 @@ pub fn run() -> Result<(), JsValue> {
             spawn_local(async move {
                 game_over(&dead_snake)
                     .await
-                    .unwrap_or_else(|err| console::error_1(&err.into()));
+                    .unwrap_or_else(|err| console::error_1(&err));
             });
             return;
         }
@@ -187,10 +187,10 @@ fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
         snake::LINE_THICKNESS,
         snake::LINE_THICKNESS,
     );
-    snake.body.iter().rev().skip(1).next().and_then(|next| {
+    snake.body.iter().rev().nth(1).map(|next| {
         context.set_fill_style(&JsValue::from_str("#bada55"));
         context.fill_rect(next.x, next.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
-        Some(next)
+        next
     });
     Ok(())
 }

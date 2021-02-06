@@ -1,5 +1,3 @@
-use rand;
-
 pub const WIDTH: u32 = 300;
 pub const HEIGHT: u32 = 300;
 pub const LINE_THICKNESS: f64 = 25.0;
@@ -142,7 +140,7 @@ impl Position {
         Position { x, y }
     }
 
-    fn random_except(blacklist: &Vec<Position>) -> Option<Position> {
+    fn random_except(blacklist: &[Position]) -> Option<Position> {
         let max_positions = WIDTH / LINE_THICKNESS as u32 * HEIGHT / LINE_THICKNESS as u32;
         // TODO: Maybe don't do completely random when there are only a few options
         if blacklist.len() as u32 == max_positions {
