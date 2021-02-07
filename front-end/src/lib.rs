@@ -7,7 +7,7 @@ use std::{
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{console, CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
+use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
 
 mod snake;
 use crate::snake::*;
@@ -28,10 +28,12 @@ enum GameStatus {
 // Called by our JS entry point
 #[wasm_bindgen(start)]
 pub fn run() -> Result<(), JsValue> {
+    wasm_logger::init(wasm_logger::Config::default());
+
     spawn_local(async {
         fetch_and_set_highscores()
             .await
-            .unwrap_or_else(|err| console::error_1(&err))
+            .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
     });
     add_canvas()?;
     write_on_canvas("Press <space>", 3)?;
@@ -60,21 +62,36 @@ pub fn run() -> Result<(), JsValue> {
                         *direction_ptr_2.lock().unwrap() = snake.direction;
                     }
                     *game_status = GameStatus::Playing;
-                    clear_screen().unwrap();
-                    draw_snake(&snake).unwrap();
-                    draw_apple(&snake.target.unwrap()).unwrap();
+                    clear_screen()
+                        .unwrap_or_else(|e| log::error!("Failed to clear screen due to {:?}", e));
+                    draw_snake(&snake)
+                        .unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
+                    draw_apple(&snake.target.expect("target was undefined"))
+                        .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
                 }
                 ViCommand::Stop if *game_status_ptr.lock().unwrap() == GameStatus::Playing => {
                     *snake = snake.kill();
                 }
                 ViCommand::Help => {
                     clear_screen().unwrap();
-                    write_on_canvas("Navigate:", 2).unwrap();
-                    write_on_canvas("hjkl, ⬅⬇⬆️️➡️️, or", 3).unwrap();
-                    write_on_canvas("the numpad below", 4).unwrap();
-                    write_on_canvas("start with", 6).unwrap();
-                    write_on_canvas("<space>", 7).unwrap();
-                    write_on_canvas("quit with <q>", 9).unwrap();
+                    write_on_canvas("Navigate:", 2).unwrap_or_else(|e| {
+                        log::error!("Failed to write on canvas due to {:?}", e)
+                    });
+                    write_on_canvas("hjkl, ⬅⬇⬆️️➡️️, or", 3).unwrap_or_else(|e| {
+                        log::error!("Failed to write on canvas due to {:?}", e)
+                    });
+                    write_on_canvas("the numpad below", 4).unwrap_or_else(|e| {
+                        log::error!("Failed to write on canvas due to {:?}", e)
+                    });
+                    write_on_canvas("start with", 6).unwrap_or_else(|e| {
+                        log::error!("Failed to write on canvas due to {:?}", e)
+                    });
+                    write_on_canvas("<space>", 7).unwrap_or_else(|e| {
+                        log::error!("Failed to write on canvas due to {:?}", e)
+                    });
+                    write_on_canvas("quit with <q>", 9).unwrap_or_else(|e| {
+                        log::error!("Failed to write on canvas due to {:?}", e)
+                    });
                 }
                 ViCommand::Move(dir)
                     if snake.apple_count() == 0 || dir != snake.direction.turn_180_degrees() =>
@@ -107,19 +124,26 @@ pub fn run() -> Result<(), JsValue> {
             };
             *game_status = GameStatus::GameOver;
             spawn_local(async move {
-                game_over(&dead_snake)
-                    .await
-                    .unwrap_or_else(|err| console::error_1(&err));
+                game_over(&dead_snake).await.unwrap_or_else(|err| {
+                    log::error!("End-of-Game actions failed due to {:?}", err)
+                });
             });
             return;
         }
 
         match old_tail {
-            Some(tail) => clear(&tail).unwrap(),
-            None if snake.target.is_some() => draw_apple(&snake.target.unwrap()).unwrap(),
-            None => write_on_canvas("💯 u crazy!! 💯", 8).unwrap(),
+            Some(tail) => {
+                clear(&tail).unwrap_or_else(|e| log::error!("Failed to clear tail due to {:?}", e))
+            }
+            None if snake.target.is_some() => {
+                draw_apple(&snake.target.expect("target was undefined"))
+                    .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e))
+            }
+            None => write_on_canvas("💯 u crazy!! 💯", 8)
+                // The snake now covers the whole screen!
+                .unwrap_or_else(|e| log::error!("Failed to write on canvas due to {:?}", e)),
         }
-        draw_snake(&snake).unwrap();
+        draw_snake(&snake).unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
     })
     .forget();
 

@@ -11,6 +11,9 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 wasm-bindgen-futures = "0.4"
+js-sys = "0.3"
+log = "0.4"
+wasm-logger = "0.2"
 gloo-timers = "0.2"
 gloo-events = "0.1"
 futures = "0.3"
