@@ -1,7 +1,8 @@
+use js_sys::Error;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
-use web_sys::{console, HtmlElement, Request, RequestInit, RequestMode, Response};
+use web_sys::{HtmlElement, Request, RequestInit, RequestMode, Response};
 
 const BASE_URL: Option<&'static str> = option_env!("HIGHSCORE_API_BASE_URL");
 
@@ -22,24 +23,24 @@ impl HighScore {
 }
 
 pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
-    let window = web_sys::window().unwrap();
+    let window = web_sys::window().ok_or("Window was none")?;
 
-    let tbody = match window
+    let tbody = window
         .document()
-        .unwrap()
-        .query_selector("#highscore-tbody")?
-    {
-        Some(v) => v.dyn_into::<HtmlElement>()?,
-        None => panic!("no table body found!"),
-    };
+        .map(|doc| doc.query_selector("#highscore-tbody"))
+        .ok_or(Error::new("Cant find highscore table"))??
+        .map(|table| table.dyn_into::<HtmlElement>())
+        .ok_or(Error::new("Highscore table was not a HtmlElement???"))??;
 
-    let highscores = fetch_highscores().await;
-    let html = match highscores {
+    let html = match fetch_highscores().await {
         Ok(highscores) => highscores
             .iter()
             .map(|h| h.to_table_row())
             .collect::<String>(),
-        Err(_) => String::from("<tr><td colspan=\"2\">Failed to fetch :-(</td></tr>"),
+        Err(e) => {
+            log::error!("Failed to fetch highscores due to {:?}", e);
+            String::from("<tr><td colspan=\"2\">Failed to fetch :-(</td></tr>")
+        }
     };
 
     tbody.set_inner_html(&html);
@@ -49,28 +50,26 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
 
 pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     let mut options = RequestInit::new();
-    options.method("GET");
-    options.mode(RequestMode::Cors);
+    options.method("GET").mode(RequestMode::Cors);
 
-    let base_url = match BASE_URL {
-        Some(url) => Ok(url),
-        None => Err(JsValue::from_str("Baseurl is undefined")),
-    }?;
-    console::log_1(&format!("using highscore api url: {}", base_url).into());
+    let base_url = BASE_URL.ok_or(Error::new("Baseurl is undefined"))?;
+    log::debug!("Fetching highscores with api url {}", base_url);
 
     let endpoint = format!("{}/api/topten", base_url);
-
     let request = Request::new_with_str_and_init(&endpoint, &options)?;
-
     request.headers().set("Accept", "application/json")?;
 
-    let window = web_sys::window().unwrap();
+    let window = web_sys::window().ok_or(Error::new("Windows was none"))?;
+
     let res: Response = JsFuture::from(window.fetch_with_request(&request))
         .await?
         .dyn_into()?;
 
     let json = JsFuture::from(res.json()?).await?;
-    let highscores: Vec<HighScore> = json.into_serde().unwrap();
+
+    let highscores: Vec<HighScore> = json
+        .into_serde()
+        .map_err(|e| Error::new(&format!("Serialization failed due to {}", e)))?;
 
     Ok(highscores)
 }
@@ -78,23 +77,26 @@ pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
 pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
     let top_scores = fetch_highscores().await?;
     if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
-        console::log_1(&format!("Score {} is a highscore!", score).into());
-        let window = web_sys::window().unwrap();
+        log::debug!("Score {} is a highscore!", score);
+
+        let window = web_sys::window().ok_or(Error::new("Window was none"))?;
         let user_name =
             match window.prompt_with_message("Please enter your name for the highscore table")? {
                 Some(v) => v,
                 None => {
-                    console::warn_1(&"highscore submission aborted as no username given".into());
+                    log::warn!("highscore submission aborted as no username given");
                     return Ok(());
                 }
             };
 
-        let json = serde_json::to_string(&HighScore { user_name, score }).unwrap();
+        let json = serde_json::to_string(&HighScore { user_name, score })
+            .map_err(|e| Error::new(&format!("Error during deserialization: {:?}", e)))?;
 
         let mut options = RequestInit::new();
-        options.method("POST");
-        options.mode(RequestMode::Cors);
-        options.body(Some(&json.into()));
+        options
+            .method("POST")
+            .mode(RequestMode::Cors)
+            .body(Some(&json.into()));
 
         let request =
             Request::new_with_str_and_init(&format!("{}/api/submit", BASE_URL.unwrap()), &options)?;
@@ -108,11 +110,12 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
 
         match res.ok() {
             true => {
-                console::log_1(&"highscore submitted".into());
+                log::info!("Highscore submitted successfully");
                 fetch_and_set_highscores().await?;
             }
             false => {
-                console::error_1(&"failed to submit highscore".into());
+                log::error!("failed to submit highscore");
+                return Err(Error::new("Failed to submit highscore").into());
             }
         }
     }
