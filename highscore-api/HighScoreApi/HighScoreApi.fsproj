@@ -5,6 +5,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="dapper" Version="2.0.35" />
+    <PackageReference Include="polly" Version="7.2.1" />
     <PackageReference Include="FSharp.Data.LiteralProviders" Version="0.2.7" />
     <PackageReference Include="FSharp.SystemTextJson" Version="0.11.13" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="1.1.3" />
