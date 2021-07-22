@@ -28,9 +28,9 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
     let tbody = window
         .document()
         .map(|doc| doc.query_selector("#highscore-tbody"))
-        .ok_or(Error::new("Cant find highscore table"))??
+        .ok_or_else(|| Error::new("Cant find highscore table"))??
         .map(|table| table.dyn_into::<HtmlElement>())
-        .ok_or(Error::new("Highscore table was not a HtmlElement???"))??;
+        .ok_or_else(|| Error::new("Highscore table was not a HtmlElement???"))??;
 
     let html = match fetch_highscores().await {
         Ok(highscores) => highscores
@@ -52,14 +52,14 @@ pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     let mut options = RequestInit::new();
     options.method("GET").mode(RequestMode::Cors);
 
-    let base_url = BASE_URL.ok_or(Error::new("Baseurl is undefined"))?;
+    let base_url = BASE_URL.ok_or_else(|| Error::new("Baseurl is undefined"))?;
     log::debug!("Fetching highscores with api url {}", base_url);
 
     let endpoint = format!("{}/api/topten", base_url);
     let request = Request::new_with_str_and_init(&endpoint, &options)?;
     request.headers().set("Accept", "application/json")?;
 
-    let window = web_sys::window().ok_or(Error::new("Windows was none"))?;
+    let window = web_sys::window().ok_or_else(|| Error::new("Windows was none"))?;
 
     let res: Response = JsFuture::from(window.fetch_with_request(&request))
         .await?
@@ -79,7 +79,7 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
     if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
         log::debug!("Score {} is a highscore!", score);
 
-        let window = web_sys::window().ok_or(Error::new("Window was none"))?;
+        let window = web_sys::window().ok_or_else(|| Error::new("Window was none"))?;
         let user_name =
             match window.prompt_with_message("Please enter your name for the highscore table")? {
                 Some(v) => v,
