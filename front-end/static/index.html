@@ -8,10 +8,10 @@
       content="The snake game with vim keys. Play for free. Written in rust/web-assembly."
     >
     <title>snake with vim keys</title>
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style-$VERSION.css" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <script type="module">
-      import init from "./wasm.js";
+      import init from "./wasm-$VERSION.js";
       init();
     </script>
   </head>
@@ -125,9 +125,9 @@
     </div>
     <footer>
       <p>
-        Christian Fosli | Written in
-        <a href="https://www.rust-lang.org">Rust</a> and compiled to Web
-        Assembly | Source code on
+        Made by Christian Fosli with Rust/web-assembly
+        | Version $VERSION
+        | Source code on
         <a href="https://github.com/christianfosli/snake">GitHub</a>
         |
         <button

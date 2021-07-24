@@ -54,7 +54,11 @@ jobs:
 
       - name: Build and Copy Artifacts
         run: |
-          docker build -t snake-frontend:latest .
+          docker build \
+            --build-arg VERSION=$(git rev-parse --short HEAD) \
+            -t snake-frontend:$(git rev-parse --short HEAD) \
+            -t snake-frontend:latest \
+            .
           container="$(docker create snake-frontend:latest)"
           docker cp "$container:/usr/src/app/static" dist
 
