@@ -1,9 +1,8 @@
 namespace HighScoreApi
 
-open Microsoft.AspNetCore.Mvc
-open Microsoft.Azure.WebJobs
-open Microsoft.Azure.WebJobs.Extensions.Http
-open Microsoft.AspNetCore.Http
+open System.Net
+open Microsoft.Azure.Functions.Worker
+open Microsoft.Azure.Functions.Worker.Http
 open Microsoft.Data.SqlClient
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Primitives
@@ -28,23 +27,33 @@ module TopTen =
             return result
         }
 
-    [<FunctionName("TopTen")>]
-    let run ([<HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)>] req: HttpRequest) (log: ILogger) =
-        async {
-            // It is not yet possible to configure CORS for az functions locally in containers
-            // so we just fix headers (ref https://github.com/Azure/azure-functions-host/issues/5090)
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", StringValues "*")
+    [<Function("TopTen")>]
+    let run
+        ([<HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)>] req: HttpRequestData)
+        (ctx: FunctionContext)
+        =
+        let log = ctx.GetLogger()
 
+        async {
             let! topScores = connString |> dbConnection |> topScores
 
             return
                 match topScores with
-                | Ok x ->
-                    Seq.length x
+                | Ok scores ->
+                    Seq.length scores
                     |> sprintf "%d scores retrieved successfully"
                     |> log.LogInformation
 
-                    Seq.map fromHighScore x |> OkObjectResult :> IActionResult
+                    let res = req.CreateResponse(HttpStatusCode.OK)
+
+                    res
+                        .WriteAsJsonAsync(Seq.map fromHighScore scores)
+                        .AsTask()
+                    |> Async.AwaitTask
+                    |> Async.RunSynchronously
+
+                    res
+
                 | Error e ->
                     sprintf "Failed to get top ten: %A" e
                     |> log.LogError
