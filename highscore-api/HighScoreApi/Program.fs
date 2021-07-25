@@ -1,9 +1,6 @@
 namespace HighScoreApi
 
 open System.Text.Json
-open System.Text.Json.Serialization
-open Azure.Core.Serialization
-open Microsoft.Azure.Functions.Worker
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting

@@ -9,7 +9,6 @@ open Microsoft.Azure.Functions.Worker
 open Microsoft.Azure.Functions.Worker.Http
 open Microsoft.Data.SqlClient
 open Microsoft.Extensions.Logging
-open Microsoft.Extensions.Primitives
 
 open Common.DbUtils
 open Common.WebUtils
