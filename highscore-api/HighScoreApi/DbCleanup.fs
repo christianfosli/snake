@@ -17,14 +17,8 @@ module DbCleanup =
             .Value
 
     let removeNonTopHighScores connString =
-        use conn = new SqlConnection(connString)
-
-        conn.Execute
-            "with ToDelete as (
-                select * from [highscores]
-                order by [Score] desc, [TimeStamp] asc
-                offset 15 rows)
-            delete from ToDelete;"
+        // TODO
+        0
 
     [<Function("CleanupJob")>]
     let run ([<TimerTrigger(Schedule)>] myTimer: TimerInfo, ctx: FunctionContext) =
@@ -33,6 +27,6 @@ module DbCleanup =
         sprintf "Database clean-up triggered at: %A" DateTime.Now
         |> log.LogInformation
 
-        removeNonTopHighScores connString
-        |> sprintf "%d rows deleted"
-        |> log.LogInformation
+//removeNonTopHighScores connString
+//|> sprintf "%d rows deleted"
+//|> log.LogInformation

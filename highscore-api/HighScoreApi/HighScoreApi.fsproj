@@ -19,10 +19,13 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.0.*" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.*" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.1.*" />
+	<PackageReference Include="MongoDB.Driver" Version="2.13.*" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Common.fs" />
     <Compile Include="Common.Dto.fs" />
+    <Compile Include="Common.DbUtils.fs" />
+    <Compile Include="Common.WebUtils.fs" />
     <Compile Include="DbCleanup.fs" />
     <Compile Include="TopTen.fs" />
     <Compile Include="Submit.fs" />
