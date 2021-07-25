@@ -1,8 +1,6 @@
 namespace HighScoreApi.Common
 
 open System
-open System.Security.Cryptography
-open MongoDB.Bson
 open MongoDB.Bson.Serialization.Attributes
 
 open HighScoreApi.Common.Types

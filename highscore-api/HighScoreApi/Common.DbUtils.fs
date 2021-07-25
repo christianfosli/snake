@@ -1,10 +1,8 @@
 namespace HighScoreApi.Common
 
-open MongoDB.Bson
 open MongoDB.Driver
 open System
 
-open HighScoreApi.Common.Types
 open HighScoreApi.Common.Dto
 
 module DbUtils =

@@ -1,16 +1,13 @@
 namespace HighScoreApi
 
+open System.Net
 open Microsoft.Azure.Functions.Worker
 open Microsoft.Azure.Functions.Worker.Http
 open Microsoft.Extensions.Logging
 open MongoDB.Driver
 
-open System.Linq
-open System.Net
-
 open HighScoreApi.Common
-open Common.Dto
-open Common.Types
+open HighScoreApi.Common.Dto
 
 module TopTen =
 
@@ -22,16 +19,16 @@ module TopTen =
 
         async {
             try
-                let! sortedScores =
+                let! topten =
                     collection
                         .Find(fun _ -> true)
                         .Sort(sortByScore)
+                        .Limit(10)
                         .ToListAsync()
                     |> Async.AwaitTask
 
                 return
-                    sortedScores
-                    |> Seq.truncate 10
+                    topten
                     |> Seq.map HighScoreDocument.toHighScore
                     |> Seq.map HighScoreDto.fromHighScore
                     |> Ok
@@ -73,7 +70,7 @@ module TopTen =
                     let res =
                         WebUtils.resWithOkCors HttpStatusCode.InternalServerError req
 
-                    res.WriteString "An error occured"
+                    res.WriteString "An error occured trying to fetch topten. Details in server logs."
                     res
         }
         |> Async.StartAsTask

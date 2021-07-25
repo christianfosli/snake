@@ -1,6 +1,5 @@
 namespace HighScoreApi
 
-open System.Net
 open System.IO
 open System.Text.Json
 open System.Text.Json.Serialization
@@ -10,8 +9,7 @@ open Microsoft.Extensions.Logging
 open MongoDB.Driver
 
 open HighScoreApi.Common
-open Common.Types
-open Common.Dto
+open HighScoreApi.Common.Dto
 
 module Submit =
 
