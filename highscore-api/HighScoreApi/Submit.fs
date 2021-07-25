@@ -67,12 +67,8 @@ module Submit =
                 | Error e ->
                     sprintf "%A" e |> log.LogError
 
-                    let res =
-                        req.CreateResponse(HttpStatusCode.BadRequest)
-
-                    sprintf "An error occured: %A" e
-                    |> res.WriteString
-
-                    return WebUtils.badReqWithOkCors req
+                    let res = WebUtils.badReqWithOkCors req
+                    res.WriteString $"%A{e}"
+                    return res
         }
         |> Async.StartAsTask
