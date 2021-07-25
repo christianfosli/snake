@@ -50,10 +50,13 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: function-output
+          path: function-output
+
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - uses: azure/functions-action@v1
         with:
           app-name: visnakehighscores
-          package: output
+          package: function-output
