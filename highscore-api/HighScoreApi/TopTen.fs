@@ -8,6 +8,7 @@ open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Primitives
 
 open Common.DbUtils
+open Common.WebUtils
 open Common.Dto.HighScoreDto
 open Common.Types
 
@@ -44,7 +45,7 @@ module TopTen =
                     |> sprintf "%d scores retrieved successfully"
                     |> log.LogInformation
 
-                    let res = req.CreateResponse(HttpStatusCode.OK)
+                    let res = okResWithOkCors req
 
                     res
                         .WriteAsJsonAsync(Seq.map fromHighScore scores)

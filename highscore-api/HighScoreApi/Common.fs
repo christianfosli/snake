@@ -69,5 +69,22 @@ module DbUtils =
                     |> Async.AwaitTask
 
                 return Ok res
-            with ex -> return Error ex
+            with
+            | ex -> return Error ex
         }
+
+module WebUtils =
+    open System.Net
+    open Microsoft.Azure.Functions.Worker.Http
+
+    /// Create response with CORS header set to allow all origins.
+    /// Work-around for bad CORS support in Azure functions docker containers
+    let resWithOkCors (status: HttpStatusCode) (req: HttpRequestData) =
+        let res = req.CreateResponse(status)
+        res.Headers.Add("Access-Control-Allow-Origin", "*")
+        res
+
+    let okResWithOkCors (req: HttpRequestData) = resWithOkCors HttpStatusCode.OK req
+
+    let badReqWithOkCors (req: HttpRequestData) =
+        resWithOkCors HttpStatusCode.BadRequest req

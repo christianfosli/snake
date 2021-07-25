@@ -12,6 +12,7 @@ open Microsoft.Extensions.Logging
 open Microsoft.Extensions.Primitives
 
 open Common.DbUtils
+open Common.WebUtils
 open Common.Dto
 open Common.Dto.HighScoreDto
 
@@ -49,29 +50,33 @@ module Submit =
             sprintf "Submit triggered with method %A" req.Method
             |> log.LogInformation
 
-            use stream = new StreamReader(req.Body)
-            let! body = stream.ReadToEndAsync() |> Async.AwaitTask
+            if req.Method.ToLower() = "options" then
+                return okResWithOkCors req
+            else
+                use stream = new StreamReader(req.Body)
 
-            match deserialize body |> toHighScore with
-            | Ok highscore ->
-                sprintf "persisting %A" highscore
-                |> log.LogInformation
+                let! body = stream.ReadToEndAsync() |> Async.AwaitTask
 
-                let! rows = persist (connString |> dbConnection) highscore
+                match deserialize body |> toHighScore with
+                | Ok highscore ->
+                    sprintf "persisting %A" highscore
+                    |> log.LogInformation
 
-                sprintf "%d rows affected" rows
-                |> log.LogInformation
+                    let! rows = persist (connString |> dbConnection) highscore
 
-                return req.CreateResponse(HttpStatusCode.OK)
-            | Error e ->
-                sprintf "%A" e |> log.LogError
+                    sprintf "%d rows affected" rows
+                    |> log.LogInformation
 
-                let res =
-                    req.CreateResponse(HttpStatusCode.BadRequest)
+                    return okResWithOkCors req
+                | Error e ->
+                    sprintf "%A" e |> log.LogError
 
-                sprintf "An error occured: %A" e
-                |> res.WriteString
+                    let res =
+                        req.CreateResponse(HttpStatusCode.BadRequest)
 
-                return res
+                    sprintf "An error occured: %A" e
+                    |> res.WriteString
+
+                    return badReqWithOkCors req
         }
         |> Async.StartAsTask
