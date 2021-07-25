@@ -24,3 +24,14 @@ module Types =
         { UserName: UserName
           Score: Score
           TimeStamp: DateTimeOffset }
+
+    module HighScore =
+
+        /// Generates an id "unique" for a highscore.
+        /// Same { username, score, date } counts as unique.
+        let Uid highscore =
+            let date = highscore.TimeStamp.ToString "yyyyMMdd"
+            let userHash = highscore.UserName.GetHashCode()
+            let score = Score.value highscore.Score
+
+            $"%s{date}-%d{userHash}-s%d{score}"
