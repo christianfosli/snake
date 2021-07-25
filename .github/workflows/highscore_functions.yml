@@ -13,42 +13,50 @@ on:
       - .github/workflows/highscore_functions.yml
 
 jobs:
-  build:
-    if: github.event_name == 'pull_request'
+  build-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '3.1.x'
-      - name: Run dotnet build
-        run: |
-          cd highscore-api/HighScoreApi
-          dotnet build
-      - name: Run dotnet test
+
+      - name: Run tests
         run: |
           cd highscore-api/HighScoreApi.Tests
           dotnet test
-  build-and-deploy:
-    if: github.event_name == 'push'
+
+      - name: Build with docker
+        run: |
+          cd highscore-api/HighScoreApi
+          docker build -t highscoreapi .
+
+      # Running custom docker containers as azure functions require premium plans
+      # thus we extract the files and upload, instead of shipping the container image
+      - name: Extract deploy artifacts from docker image
+        run: |
+          container=$(docker create highscoreapi)
+          docker cp $container:/home/site/wwwroot output
+
+      - name: Upload deploy artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: function-output
+          path: output
+          retention-days: 5
+
+  deploy:
+    needs: build-and-test
     runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-dotnet@v1
+      - uses: actions/download-artifact@v2
         with:
-          dotnet-version: '3.1.x'
-      - name: Run dotnet build
-        run: |
-          cd highscore-api/HighScoreApi
-          dotnet build --configuration Release --output ./output
-      - name: Run dotnet test
-        run: |
-          cd highscore-api/HighScoreApi.Tests
-          dotnet test
+          name: function-output
+          path: function-output
+
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - uses: azure/functions-action@v1
         with:
           app-name: visnakehighscores
-          package: highscore-api/HighScoreApi/output
+          package: function-output

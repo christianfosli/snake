@@ -37,9 +37,9 @@ module DbUtils =
     type SqlScoreHandler() =
         inherit SqlMapper.TypeHandler<Score>()
 
-        override __.SetValue(param, value) = param.Value <- value |> Score.value
+        override _.SetValue(param, value) = param.Value <- value |> Score.value
 
-        override __.Parse value =
+        override _.Parse value =
             let value = value :?> int
 
             match value |> Score.create with
@@ -71,3 +71,17 @@ module DbUtils =
                 return Ok res
             with ex -> return Error ex
         }
+
+module WebUtils =
+    open System.Net
+    open Microsoft.Azure.Functions.Worker.Http
+
+    /// Create response with CORS header set to allow all origins.
+    /// Work-around for bad CORS support in Azure functions docker containers
+    let resWithOkCors (status: HttpStatusCode) (req: HttpRequestData) : HttpResponseData =
+        let res = req.CreateResponse(status)
+        res.Headers.Add("Access-Control-Allow-Origin", "*")
+        res
+
+    let okResWithOkCors : HttpRequestData -> HttpResponseData = resWithOkCors HttpStatusCode.OK
+    let badReqWithOkCors : HttpRequestData -> HttpResponseData = resWithOkCors HttpStatusCode.BadRequest
