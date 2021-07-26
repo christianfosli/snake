@@ -46,6 +46,8 @@ jobs:
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
+    env:
+      ENVIRONMENT: prod
     steps:
       - uses: actions/download-artifact@v2
         with:
@@ -58,5 +60,5 @@ jobs:
 
       - uses: azure/functions-action@v1
         with:
-          app-name: visnakehighscores
+          app-name: func-snakehighscores-${{ env.ENVIRONMENT }}
           package: function-output
