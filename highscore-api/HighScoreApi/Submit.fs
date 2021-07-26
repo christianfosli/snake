@@ -1,6 +1,7 @@
 namespace HighScoreApi
 
 open System.IO
+open System.Net
 open System.Text.Json
 open System.Text.Json.Serialization
 open Microsoft.Azure.Functions.Worker
@@ -17,23 +18,37 @@ module Submit =
         let options = JsonSerializerOptions()
         options.Converters.Add(JsonFSharpConverter())
         options.PropertyNameCaseInsensitive <- true
-        JsonSerializer.Deserialize<HighScoreDto>(body, options)
 
-    let persist (collection: IMongoCollection<HighScoreDocument>) (log: ILogger) highscore =
+        try
+            JsonSerializer.Deserialize<HighScoreDto>(body, options)
+            |> Ok
+        with
+        | err -> Error err.Message
+
+    type PersistResult =
+        | Created
+        | AlreadyExists
+        | Err of string
+
+    let persist (collection: IMongoCollection<HighScoreDocument>) highscore =
         async {
-            let! existingScore =
-                collection
-                    .Find(fun s -> s.Id = highscore.Id)
-                    .FirstOrDefaultAsync()
-                |> Async.AwaitTask
-
-            if box existingScore = null then
-                do!
-                    collection.InsertOneAsync(highscore)
+            try
+                let! existingScore =
+                    collection
+                        .Find(fun s -> s.Id = highscore.Id)
+                        .FirstOrDefaultAsync()
                     |> Async.AwaitTask
-            else
-                sprintf "HighScore already exists with id %A. Nothing to do" highscore.Id
-                |> log.LogInformation
+
+                if box existingScore = null then
+                    do!
+                        collection.InsertOneAsync(highscore)
+                        |> Async.AwaitTask
+
+                    return PersistResult.Created
+                else
+                    return PersistResult.AlreadyExists
+            with
+            | err -> return PersistResult.Err err.Message
         }
 
     [<Function("Submit")>]
@@ -44,29 +59,43 @@ module Submit =
         let log = ctx.GetLogger()
 
         async {
-            sprintf "Submit triggered with method %A" req.Method
-            |> log.LogInformation
+            use stream = new StreamReader(req.Body)
 
-            if req.Method.ToLower() = "options" then
-                return WebUtils.okResWithOkCors req
-            else
-                use stream = new StreamReader(req.Body)
+            let! body = stream.ReadToEndAsync() |> Async.AwaitTask
 
-                let! body = stream.ReadToEndAsync() |> Async.AwaitTask
-
-                match deserialize body |> HighScoreDto.toHighScore with
+            match deserialize body with
+            | Ok highscore ->
+                match highscore |> HighScoreDto.toHighScore with
                 | Ok highscore ->
-                    sprintf "persisting %A" highscore
-                    |> log.LogInformation
+                    log.LogInformation $"persisting %A{highscore}"
 
-                    do! persist DbUtils.highscores log (HighScoreDocument.fromHighScore highscore)
+                    let! dbRes = persist DbUtils.highscores (HighScoreDocument.fromHighScore highscore)
 
-                    return WebUtils.okResWithOkCors req
+                    let res =
+                        match dbRes with
+                        | PersistResult.Created -> req.CreateResponse HttpStatusCode.Created
+                        | PersistResult.AlreadyExists -> req.CreateResponse HttpStatusCode.OK
+                        | PersistResult.Err e -> req.CreateResponse HttpStatusCode.InternalServerError
+
+                    log.LogInformation $"%A{dbRes}"
+                    res.WriteString $"%A{dbRes}"
+                    return res
+
                 | Error e ->
-                    sprintf "%A" e |> log.LogError
+                    sprintf "validation error: %A" e |> log.LogError
 
-                    let res = WebUtils.badReqWithOkCors req
+                    let res =
+                        req.CreateResponse HttpStatusCode.UnprocessableEntity
+
                     res.WriteString $"%A{e}"
                     return res
+            | Error e ->
+                sprintf "deserialize error: %A" e |> log.LogError
+
+                let res =
+                    req.CreateResponse HttpStatusCode.BadRequest
+
+                res.WriteString $"%A{e}"
+                return res
         }
         |> Async.StartAsTask

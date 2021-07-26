@@ -55,7 +55,7 @@ module TopTen =
                     |> sprintf "%d scores retrieved successfully"
                     |> log.LogInformation
 
-                    let res = WebUtils.okResWithOkCors req
+                    let res = req.CreateResponse HttpStatusCode.OK
 
                     res.WriteAsJsonAsync(scores).AsTask()
                     |> Async.AwaitTask
@@ -68,7 +68,7 @@ module TopTen =
                     |> log.LogError
 
                     let res =
-                        WebUtils.resWithOkCors HttpStatusCode.InternalServerError req
+                        req.CreateResponse HttpStatusCode.InternalServerError
 
                     res.WriteString "An error occured trying to fetch topten. Details in server logs."
                     res
