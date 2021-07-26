@@ -1,0 +1,43 @@
+name: terraform
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - terraform/**
+      - .github/workflows/terraform.yml
+  pull_request:
+    branches: [master]
+    paths:
+      - terraform/**
+      - .github/workflows/terraform.yml
+
+env:
+  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+
+jobs:
+  plan_apply:
+    runs-on: ubuntu-20.04
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Init
+        run: |
+          terraform -v
+          terraform init --input=false
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: terraform plan --input=false --refresh=true --lock=false --out "release.tfplan"
+
+      - name: Apply
+        run: terraform apply --input=false release.tfplan
