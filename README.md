@@ -9,17 +9,18 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 
 ## Architecture 🏗
 
-The system consists of 3 parts, which are all defined in this repository.
+The system consists of 3 parts
 
  * Front-end application where snake is implemented with rust/webassembly
 
- * Azure functions for setting and fetching highscores from a SQL Server database
+ * Azure functions for setting and fetching highscores from a database
 
- * MS SQL Server database
+ * MongoDB database
 
+ **TODO: Update the diagram after switching DB provider**
  ![architecture diagram](./architecture.svg)
 
-We use a server-less approach, where the majority of the code is front-end.
+We use a serverless approach, where the majority of the code is front-end.
 
 ## Development 🐳
 
@@ -39,24 +40,4 @@ docker-compose down
 
 ### Required Tools
 
-**[docker](https://www.docker.com/) and docker-compose (incuded in Docker Desktop)**
-
-Or
-
-* [azure-functions-core-tools](https://github.com/Azure/azure-functions-core-tools)
-
-* [dotnet core 3.1](https://github.com/dotnet/core)
-
-* [node](https://nodejs.org/en/)
-
-* [rust](http://rustlang.org/)
-
-* [wasm-pack](https://github.com/rustwasm/wasm-pack)
-
-* A SQL Server database with schema matching database/schema.sql,
-  and the database connection string exposed to the function apps as `CONNECTION_STRING` env variable
-
-### Formatting
-
-Prettier is used to format HTML, CSS and JavaScript files.
-Rustfmt is used to format Rust files.
+[docker](https://www.docker.com/) and docker-compose (incuded in Docker Desktop)

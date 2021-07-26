@@ -15,21 +15,20 @@ services:
       args:
         CRON_CLEANUP_SCHEDULE: '0 * * * * *'
     environment:
-      - CONNECTION_STRING=Server=tcp:db,1433;Database=snake-hs;User ID=sa;Password=Secret_01
+      CONNECTION_STRING: mongodb://root:secret@db
     ports:
       - '7071:80'
     depends_on:
       - db
   db:
-    image: mcr.microsoft.com/mssql/server:latest
+    image: mongo
     environment:
-      - SA_PASSWORD=Secret_01
-      - ACCEPT_EULA=Y
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
     ports:
-      - '1434:1433'
+      - '27017:27017'
     volumes:
-      - './database/entrypoint.bash:/entrypoint.bash'
-      - './database/init.bash:/init.bash'
-      - './database/schema.sql:/schema.sql'
-    command: /bin/bash /entrypoint.bash
+      - snake-db:/data/db
 
+volumes:
+  snake-db:

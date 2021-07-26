@@ -25,63 +25,13 @@ module Types =
           Score: Score
           TimeStamp: DateTimeOffset }
 
-module DbUtils =
-    open Types
-    open Dapper
-    open Polly
-    open Microsoft.Data.SqlClient
+    module HighScore =
 
-    let connString =
-        Environment.GetEnvironmentVariable "CONNECTION_STRING"
+        /// Generates an id "unique" for a highscore.
+        /// Same { username, score, date } counts as unique.
+        let Uid highscore =
+            let date = highscore.TimeStamp.ToString "yyyyMMdd"
+            let userHash = highscore.UserName.GetHashCode()
+            let score = Score.value highscore.Score
 
-    type SqlScoreHandler() =
-        inherit SqlMapper.TypeHandler<Score>()
-
-        override _.SetValue(param, value) = param.Value <- value |> Score.value
-
-        override _.Parse value =
-            let value = value :?> int
-
-            match value |> Score.create with
-            | Ok score -> score
-            | Error e -> failwithf "Error parsing to Score: %A" e
-
-    let dbConnection connString =
-        SqlMapper.AddTypeHandler(SqlScoreHandler())
-        new SqlConnection(connString)
-
-    let queryWithRetries<'entity> (connection: SqlConnection) (sql: string) =
-        let retryPolicy =
-            Policy
-                .Handle<SqlException>()
-                .WaitAndRetryAsync(
-                    seq {
-                        TimeSpan.FromSeconds 2.0
-                        TimeSpan.FromSeconds 4.0
-                        TimeSpan.FromSeconds 6.0
-                    }
-                )
-
-        async {
-            try
-                let! res =
-                    retryPolicy.ExecuteAsync(fun () -> connection.QueryAsync<'entity>(sql))
-                    |> Async.AwaitTask
-
-                return Ok res
-            with ex -> return Error ex
-        }
-
-module WebUtils =
-    open System.Net
-    open Microsoft.Azure.Functions.Worker.Http
-
-    /// Create response with CORS header set to allow all origins.
-    /// Work-around for bad CORS support in Azure functions docker containers
-    let resWithOkCors (status: HttpStatusCode) (req: HttpRequestData) : HttpResponseData =
-        let res = req.CreateResponse(status)
-        res.Headers.Add("Access-Control-Allow-Origin", "*")
-        res
-
-    let okResWithOkCors : HttpRequestData -> HttpResponseData = resWithOkCors HttpStatusCode.OK
-    let badReqWithOkCors : HttpRequestData -> HttpResponseData = resWithOkCors HttpStatusCode.BadRequest
+            $"%s{date}-%d{userHash}-s%d{score}"

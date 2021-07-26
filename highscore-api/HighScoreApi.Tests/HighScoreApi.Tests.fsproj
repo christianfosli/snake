@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Include="ScoreTests.fs" />
+    <Compile Include="MapHighScoreTests.fs" />
   </ItemGroup>
 
   <ItemGroup>

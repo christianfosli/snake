@@ -1,30 +1,42 @@
 namespace HighScoreApi
 
+open System.Net
 open Microsoft.Azure.Functions.Worker
 open Microsoft.Azure.Functions.Worker.Http
-open Microsoft.Data.SqlClient
 open Microsoft.Extensions.Logging
+open MongoDB.Driver
 
-open Common.DbUtils
-open Common.WebUtils
-open Common.Dto.HighScoreDto
-open Common.Types
+open HighScoreApi.Common
+open HighScoreApi.Common.Dto
 
 module TopTen =
 
-    let topScores (connection: SqlConnection) =
+    let topten (collection: IMongoCollection<HighScoreDocument>) =
+        let sortByScore =
+            Builders<HighScoreDocument>
+                .Sort.Descending(fun s -> s.Score :> obj)
+                .Ascending(fun s -> s.TimeStamp :> obj)
+
         async {
-            let! result =
-                queryWithRetries<HighScore>
-                    connection
-                    "select top(10) [UserName],[Score],[TimeStamp]
-                     from [highscores]
-                     order by [Score] desc, [TimeStamp] asc"
+            try
+                let! topten =
+                    collection
+                        .Find(fun _ -> true)
+                        .Sort(sortByScore)
+                        .Limit(10)
+                        .ToListAsync()
+                    |> Async.AwaitTask
 
-            do! connection.CloseAsync() |> Async.AwaitTask
+                return
+                    topten
+                    |> Seq.map HighScoreDocument.toHighScore
+                    |> Seq.map HighScoreDto.fromHighScore
+                    |> Ok
+            with
+            | ex -> return Error ex
 
-            return result
         }
+
 
     [<Function("TopTen")>]
     let run
@@ -34,7 +46,7 @@ module TopTen =
         let log = ctx.GetLogger()
 
         async {
-            let! topScores = connString |> dbConnection |> topScores
+            let! topScores = topten DbUtils.highscores
 
             return
                 match topScores with
@@ -43,11 +55,9 @@ module TopTen =
                     |> sprintf "%d scores retrieved successfully"
                     |> log.LogInformation
 
-                    let res = okResWithOkCors req
+                    let res = WebUtils.okResWithOkCors req
 
-                    res
-                        .WriteAsJsonAsync(Seq.map fromHighScore scores)
-                        .AsTask()
+                    res.WriteAsJsonAsync(scores).AsTask()
                     |> Async.AwaitTask
                     |> Async.RunSynchronously
 
@@ -57,7 +67,10 @@ module TopTen =
                     sprintf "Failed to get top ten: %A" e
                     |> log.LogError
 
-                    failwith "An error occured"
+                    let res =
+                        WebUtils.resWithOkCors HttpStatusCode.InternalServerError req
 
+                    res.WriteString "An error occured trying to fetch topten. Details in server logs."
+                    res
         }
         |> Async.StartAsTask
