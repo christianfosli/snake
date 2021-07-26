@@ -6,9 +6,12 @@ services:
       context: ./front-end
       args:
         BUILD_PROFILE: dev
-        HIGHSCORE_API_BASE_URL: http://localhost:7071
+    environment:
+      API_URL: http://api
     ports:
-      - '8080:8080'
+      - '8080:80'
+    depends_on:
+      - api
   api:
     build:
       context: highscore-api/HighScoreApi
@@ -16,8 +19,8 @@ services:
         CRON_CLEANUP_SCHEDULE: '0 * * * * *'
     environment:
       CONNECTION_STRING: mongodb://root:secret@db
-    ports:
-      - '7071:80'
+    expose:
+      - '80'
     depends_on:
       - db
   db:
@@ -25,8 +28,8 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: secret
-    ports:
-      - '27017:27017'
+    expose:
+      - '27017'
     volumes:
       - snake-db:/data/db
 
