@@ -2,7 +2,7 @@ resource "azurerm_app_service_plan" "apiPlan" {
   name                = "asp-snake-${var.ENVIRONMENT}"
   location            = "West Europe" # Norway not yet supported for func with Linux consumption plan
   resource_group_name = data.azurerm_resource_group.rg.name
-  kind                = "Linux"
+  kind                = "FunctionApp"
   reserved            = true
 
   sku {

@@ -11,6 +11,7 @@ on:
     paths:
       - terraform/**
       - .github/workflows/terraform.yml
+  workflow_dispatch:
 
 env:
   ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
