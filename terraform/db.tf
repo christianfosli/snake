@@ -5,8 +5,8 @@
 # Move it here if I decide to up the SKU
 
 resource "azurerm_key_vault_secret" "mongoConnectionString" {
+  # value      = "dummyValue"
   name         = "connstring-mongodb"
-  value        = "dummyValue"
   key_vault_id = azurerm_key_vault.vault.id
   tags         = local.common_tags
 }
