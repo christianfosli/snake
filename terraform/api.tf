@@ -13,8 +13,8 @@ resource "azurerm_app_service_plan" "apiPlan" {
   tags = local.common_tags
 }
 
-resource "azurerm_function_app" "api" {
-  name                       = "func-snake-${var.ENVIRONMENT}"
+resource "azurerm_function_app" "highScoreApi" {
+  name                       = "func-snakehighscores-${var.ENVIRONMENT}"
   location                   = data.azurerm_resource_group.rg.location
   resource_group_name        = data.azurerm_resource_group.rg.name
   app_service_plan_id        = azurerm_app_service_plan.apiPlan.id
