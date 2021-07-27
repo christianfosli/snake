@@ -1,6 +1,6 @@
 resource "azurerm_app_service_plan" "apiPlan" {
   name                = "asp-snake-${var.ENVIRONMENT}"
-  location            = data.azurerm_resource_group.rg.location
+  location            = "West Europe" # Norway not yet supported for func with Linux consumption plan
   resource_group_name = data.azurerm_resource_group.rg.name
   kind                = "Linux"
   reserved            = true
@@ -15,8 +15,8 @@ resource "azurerm_app_service_plan" "apiPlan" {
 
 resource "azurerm_function_app" "highScoreApi" {
   name                       = "func-snakehighscores-${var.ENVIRONMENT}"
-  location                   = data.azurerm_resource_group.rg.location
-  resource_group_name        = data.azurerm_resource_group.rg.name
+  location                   = azurerm_app_service_plan.apiPlan.location
+  resource_group_name        = azurerm_app_service_plan.apiPlan.resource_group_name
   app_service_plan_id        = azurerm_app_service_plan.apiPlan.id
   storage_account_name       = data.azurerm_storage_account.st.name
   storage_account_access_key = data.azurerm_storage_account.st.primary_access_key

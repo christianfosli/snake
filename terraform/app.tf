@@ -1,7 +1,7 @@
-resource "azurerm_static_site" "site" {
+resource "azurerm_static_site" "app" {
   name                = "stapp-snake-${var.ENVIRONMENT}"
   resource_group_name = data.azurerm_resource_group.rg.name
-  location            = "West Europe" # norway not yet supported
+  location            = "West Europe" # Norway not yet supported for azure static webapp
   tags                = local.common_tags
 }
 
