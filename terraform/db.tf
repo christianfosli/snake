@@ -5,8 +5,14 @@
 # Move it here if I decide to up the SKU
 
 resource "azurerm_key_vault_secret" "mongoConnectionString" {
-  # value      = "dummyValue"
   name         = "connstring-mongodb"
+  value        = "dummyValue"
   key_vault_id = azurerm_key_vault.vault.id
   tags         = local.common_tags
+
+  lifecycle {
+    # Set the secret value to the correct connecton string manually outside of terraform
+    # If we provision the DB and users as IaC we could track the value here too and remove the ignore_changes
+    ignore_changes = [value]
+  }
 }
