@@ -50,10 +50,12 @@ jobs:
             -t snake-frontend:$(git rev-parse --short HEAD) \
             -t snake-frontend:latest \
             .
+        env:
+          DOCKER_BUILDKIT: "1"
       - name: Extract files to deploy
         run: |
           container="$(docker create snake-frontend:latest)"
-          docker cp "$container:/usr/src/app/static" out
+          docker cp "$container:/usr/share/nginx/html" out
 
       - name: Deploy
         id: builddeploy
@@ -62,9 +64,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_ISLAND_0A8DCC303 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
-          app_location: front-end
+          app_location: front-end/out
           api_location: "" # leave blank or bring-your-own functions
-          output_location: out
+          output_location: ""
           skip_app_build: true
 
   close_pull_request:
