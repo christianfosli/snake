@@ -24,8 +24,13 @@ resource "azurerm_function_app" "highScoreApi" {
   version                    = "~3"
 
   app_settings = {
-    "CONNECTION_STRING"        = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongoConnectionString.id})"
-    "FUNCTIONS_WORKER_RUNTIME" = "dotnet-isolated"
+    "CONNECTION_STRING"               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongoConnectionString.id})"
+    "FUNCTIONS_WORKER_RUNTIME"        = "dotnet-isolated"
+    "APPINSIGHTS_INSTRUMENTATION_KEY" = azurerm_application_insights.appInsights.instrumentation_key
+  }
+
+  auth_settings {
+    enabled = false
   }
 
   site_config {
