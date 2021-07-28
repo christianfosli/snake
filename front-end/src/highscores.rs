@@ -4,8 +4,6 @@ use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{HtmlElement, Request, RequestInit, RequestMode, Response};
 
-const BASE_URL: Option<&'static str> = option_env!("HIGHSCORE_API_BASE_URL");
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HighScore {
     #[serde(rename = "userName")]
@@ -50,13 +48,9 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
 
 pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     let mut options = RequestInit::new();
-    options.method("GET").mode(RequestMode::Cors);
+    options.method("GET").mode(RequestMode::SameOrigin);
 
-    let base_url = BASE_URL.ok_or_else(|| Error::new("Baseurl is undefined"))?;
-    log::debug!("Fetching highscores with api url {}", base_url);
-
-    let endpoint = format!("{}/api/topten", base_url);
-    let request = Request::new_with_str_and_init(&endpoint, &options)?;
+    let request = Request::new_with_str_and_init("/api/topten", &options)?;
     request.headers().set("Accept", "application/json")?;
 
     let window = web_sys::window().ok_or_else(|| Error::new("Windows was none"))?;
@@ -95,14 +89,13 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
         let mut options = RequestInit::new();
         options
             .method("POST")
-            .mode(RequestMode::Cors)
+            .mode(RequestMode::SameOrigin)
             .body(Some(&json.into()));
 
-        let request =
-            Request::new_with_str_and_init(&format!("{}/api/submit", BASE_URL.unwrap()), &options)?;
+        let request = Request::new_with_str_and_init("/api/submit", &options)?;
 
         request.headers().set("Accept", "application/json")?;
-        request.headers().set("Content-Type", "text/plain")?;
+        request.headers().set("Content-Type", "application/json")?;
 
         let res: Response = JsFuture::from(window.fetch_with_request(&request))
             .await?

@@ -7,6 +7,7 @@ on:
       - front-end/**
       - .github/workflows/wasm_app.yml
   pull_request:
+    types: [opened, synchronize, reopened, closed]
     branches: [master]
     paths:
       - front-end/**
@@ -18,7 +19,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
@@ -35,38 +36,47 @@ jobs:
       - name: Wasm test
         run: wasm-pack test --headless --chrome
 
-  build:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+  build_and_deploy:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-20.04
+    name: Build and Deploy
     steps:
       - uses: actions/checkout@v2
-      - name: Build
-        run: docker build --build-arg BUILD_PROFILE=dev .
 
-  build-and-deploy:
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Build and Copy Artifacts
+      - name: Docker build
         run: |
           docker build \
             --build-arg VERSION=$(git rev-parse --short HEAD) \
             -t snake-frontend:$(git rev-parse --short HEAD) \
             -t snake-frontend:latest \
             .
+        env:
+          DOCKER_BUILDKIT: "1"
+      - name: Extract files to deploy
+        run: |
           container="$(docker create snake-frontend:latest)"
-          docker cp "$container:/usr/src/app/static" dist
+          docker cp "$container:/usr/share/nginx/html" out
 
-      - name: Clear azure storage container
-        run: az storage blob delete-batch --account-name 'visnake' --source '$web' --auth-mode 'login'
+      - name: Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_ISLAND_0A8DCC303 }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: upload
+          app_location: front-end/out
+          api_location: "" # leave blank or bring-your-own functions
+          output_location: ""
+          skip_app_build: true
 
-      - name: Upload to azure storage
-        run: az storage blob upload-batch --account-name 'visnake' --destination '$web' --source 'dist' --auth-mode 'login'
-
-      - name: Purge CDN
-        run: az cdn endpoint purge --content-paths '/*' --name visnake --profile-name visnake --resource-group visnake
+  close_pull_request:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-20.04
+    name: Close Pull Request
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_ISLAND_0A8DCC303 }}
+          action: close

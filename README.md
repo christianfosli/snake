@@ -27,6 +27,14 @@ We use a serverless approach, where the majority of the code is front-end.
 Run all services with docker compose:
 
 ```console
+# Enable BuildKit if you haven't. This is one several ways to do so.
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
+# Run with composev2
+docker compose up -d --build
+
+# Or run with "traditional" docker compose
 docker-compose up -d --build
 ```
 
@@ -35,7 +43,7 @@ Then open front-end at [localhost:8080](http://localhost:8080)
 To stop all services and remove their containers:
 
 ```console
-docker-compose down
+docker compose down
 ```
 
 ### Required Tools

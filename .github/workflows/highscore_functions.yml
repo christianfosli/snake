@@ -14,7 +14,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
 
@@ -44,8 +44,10 @@ jobs:
 
   deploy:
     needs: build-and-test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: github.event_name != 'pull_request'
+    env:
+      ENVIRONMENT: prod
     steps:
       - uses: actions/download-artifact@v2
         with:
@@ -54,9 +56,12 @@ jobs:
 
       - uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: '{"clientId":"${{ secrets.ARM_CLIENT_ID }}",
+            "clientSecret":"${{ secrets.ARM_CLIENT_SECRET }}",
+            "subscriptionId":"${{ secrets.ARM_SUBSCRIPTION_ID }}",
+            "tenantId":"${{ secrets.ARM_TENANT_ID }}"}'
 
       - uses: azure/functions-action@v1
         with:
-          app-name: visnakehighscores
+          app-name: func-snakehighscores-${{ env.ENVIRONMENT }}
           package: function-output

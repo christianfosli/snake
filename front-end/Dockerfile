@@ -1,22 +1,17 @@
-FROM rust:1.53
-
-RUN curl --fail https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-RUN curl --fail --location \
-  https://github.com/svenstaro/miniserve/releases/download/v0.10.4/miniserve-v0.10.4-linux-x86_64 \
-  -o /usr/bin/miniserve && chmod +x /usr/bin/miniserve
-
-WORKDIR /usr/src/app
-
-COPY . .
-
-ARG HIGHSCORE_API_BASE_URL=https://visnakehighscores.azurewebsites.net
-ENV HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL
+FROM rust:1.53 AS builder
 # Pass a unique VERSION as build arg to bust browser cache
 ARG VERSION=latest 
 ARG BUILD_PROFILE=release
+WORKDIR /usr/src/app
+RUN curl --fail https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+COPY . .
+RUN --mount=type=cache,target=/usr/local/cargo/registry \
+    --mount=type=cache,target=/usr/src/app/target \
+    wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm-${VERSION} --out-dir static
+RUN mv ./static/style.css ./static/style-${VERSION}.css
+RUN sed -i 's/$VERSION/'"$VERSION"'/g' static/index.html
 
-RUN wasm-pack build --${BUILD_PROFILE} --target web --out-name wasm-${VERSION} --out-dir static && \
-  mv ./static/style.css ./static/style-${VERSION}.css && \
-  sed -i 's/$VERSION/'"$VERSION"'/g' static/index.html
-
-CMD ["miniserve", "./static", "--index", "index.html"]
+FROM nginx AS final
+COPY ./nginx.conf.template /etc/nginx/templates/default.conf.template
+COPY --from=builder /usr/src/app/static /usr/share/nginx/html
+EXPOSE 80
