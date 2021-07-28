@@ -95,8 +95,7 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
         let request = Request::new_with_str_and_init("/api/submit", &options)?;
 
         request.headers().set("Accept", "application/json")?;
-        // TODO: Should be applicaton/json
-        request.headers().set("Content-Type", "text/plain")?;
+        request.headers().set("Content-Type", "application/json")?;
 
         let res: Response = JsFuture::from(window.fetch_with_request(&request))
             .await?
