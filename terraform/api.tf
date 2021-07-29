@@ -62,3 +62,13 @@ resource "azurerm_app_service_custom_hostname_binding" "highScoreApi" {
   app_service_name    = azurerm_function_app.highScoreApi.name
   resource_group_name = azurerm_function_app.highScoreApi.resource_group_name
 }
+
+resource "azurerm_app_service_managed_certificate" "highScoreApi" {
+  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
+}
+
+resource "azurerm_app_service_certificate_binding" "highScoreApi" {
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
+  certificate_id      = azurerm_app_service_managed_certificate.highScoreApi.id
+  ssl_state           = "SniEnabled"
+}
