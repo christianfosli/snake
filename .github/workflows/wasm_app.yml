@@ -35,6 +35,7 @@ jobs:
 
       - name: Docker build
         run: |
+          echo "Setting variables"
           if [[ ${{ github.event_name }} == 'pull_request' ]]; then
             VERSION=pr_build_$(git rev-parse --short HEAD)
             HIGHSCORE_API_BASE_URL=https://func-snakehighscores-staging.azurewebsites.net
@@ -44,9 +45,10 @@ jobs:
           fi
           echo -e "VERSION $VERSION\nAPI_URL $HIGHSCORE_API_BASE_URL\n\n"
 
+          echo "Starting build"
           docker build \
-            --build-arg VERSION \
-            --build-arg HIGHSCORE_API_BASE_URL \
+            --build-arg VERSION=$VERSION \
+            --build-arg HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL \
             -t snake-frontend:$VERSION \
             -t snake-frontend:latest \
             .
