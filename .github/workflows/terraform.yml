@@ -70,7 +70,7 @@ jobs:
         run: terraform validate
 
       - name: Plan
-        run: terraform plan --input=false --refresh=true release.tfplan"
+        run: terraform plan --input=false --refresh=true --out release.tfplan
 
       - name: Apply
         run: terraform apply --input=false release.tfplan
