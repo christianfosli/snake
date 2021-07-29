@@ -20,7 +20,7 @@ impl HighScore {
     }
 }
 
-pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
+pub async fn fetch_and_set_highscores(base_url: &str) -> Result<(), JsValue> {
     let window = web_sys::window().ok_or("Window was none")?;
 
     let tbody = window
@@ -30,7 +30,7 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
         .map(|table| table.dyn_into::<HtmlElement>())
         .ok_or_else(|| Error::new("Highscore table was not a HtmlElement???"))??;
 
-    let html = match fetch_highscores().await {
+    let html = match fetch_highscores(&base_url).await {
         Ok(highscores) => highscores
             .iter()
             .map(|h| h.to_table_row())
@@ -46,11 +46,11 @@ pub async fn fetch_and_set_highscores() -> Result<(), JsValue> {
     Ok(())
 }
 
-pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
+pub async fn fetch_highscores(base_url: &str) -> Result<Vec<HighScore>, JsValue> {
     let mut options = RequestInit::new();
-    options.method("GET").mode(RequestMode::SameOrigin);
+    options.method("GET").mode(RequestMode::Cors);
 
-    let request = Request::new_with_str_and_init("/api/topten", &options)?;
+    let request = Request::new_with_str_and_init(&format!("{}/api/topten", base_url), &options)?;
     request.headers().set("Accept", "application/json")?;
 
     let window = web_sys::window().ok_or_else(|| Error::new("Windows was none"))?;
@@ -68,8 +68,8 @@ pub async fn fetch_highscores() -> Result<Vec<HighScore>, JsValue> {
     Ok(highscores)
 }
 
-pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
-    let top_scores = fetch_highscores().await?;
+pub async fn check_and_submit_highscore(base_url: &str, score: usize) -> Result<(), JsValue> {
+    let top_scores = fetch_highscores(base_url).await?;
     if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
         log::debug!("Score {} is a highscore!", score);
 
@@ -89,10 +89,11 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
         let mut options = RequestInit::new();
         options
             .method("POST")
-            .mode(RequestMode::SameOrigin)
+            .mode(RequestMode::Cors)
             .body(Some(&json.into()));
 
-        let request = Request::new_with_str_and_init("/api/submit", &options)?;
+        let request =
+            Request::new_with_str_and_init(&format!("{}/api/submit", base_url), &options)?;
 
         request.headers().set("Accept", "application/json")?;
         request.headers().set("Content-Type", "application/json")?;
@@ -104,7 +105,7 @@ pub async fn check_and_submit_highscore(score: usize) -> Result<(), JsValue> {
         match res.ok() {
             true => {
                 log::info!("Highscore submitted successfully");
-                fetch_and_set_highscores().await?;
+                fetch_and_set_highscores(base_url).await?;
             }
             false => {
                 log::error!("failed to submit highscore");

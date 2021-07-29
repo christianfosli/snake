@@ -3,15 +3,9 @@ name: wasm_app
 on:
   push:
     branches: [master]
-    paths:
-      - front-end/**
-      - .github/workflows/wasm_app.yml
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [master]
-    paths:
-      - front-end/**
-      - .github/workflows/wasm_app.yml
 
 defaults:
   run:
@@ -27,11 +21,7 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cargo test
-        uses: actions-rs/cargo@v1.0.1
-        with:
-          command: test
-          toolchain: stable
-          args: --manifest-path front-end/Cargo.toml
+        run: cargo test
 
       - name: Wasm test
         run: wasm-pack test --headless --chrome
@@ -40,18 +30,32 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-20.04
     name: Build and Deploy
+    env:
+      DOCKER_BUILDKIT: "1"
     steps:
       - uses: actions/checkout@v2
+
+      - name: Set variables for staging
+        if: github.event_name == 'pull_request'
+        run: |
+            echo "BUILD_VERSION=pr_build_$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+            echo "HIGHSCORE_API_BASE_URL=https://func-snakehighscores-staging.azurewebsites.net" >> $GITHUB_ENV
+
+      - name: Set variables for prod
+        if: github.event_name != 'pull_request'
+        run: |
+            echo "BUILD_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+            echo "HIGHSCORE_API_BASE_URL=https://func-snakehighscores-prod.azurewebsites.net" >> $GITHUB_ENV
 
       - name: Docker build
         run: |
           docker build \
-            --build-arg VERSION=$(git rev-parse --short HEAD) \
-            -t snake-frontend:$(git rev-parse --short HEAD) \
+            --build-arg VERSION=$BUILD_VERSION \
+            --build-arg HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL \
+            -t snake-frontend:$BUILD_VERSION \
             -t snake-frontend:latest \
             .
-        env:
-          DOCKER_BUILDKIT: "1"
+
       - name: Extract files to deploy
         run: |
           container="$(docker create snake-frontend:latest)"

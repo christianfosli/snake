@@ -27,6 +27,7 @@ resource "azurerm_function_app" "highScoreApi" {
     "CONNECTION_STRING"               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongoConnectionString.id})"
     "FUNCTIONS_WORKER_RUNTIME"        = "dotnet-isolated"
     "APPINSIGHTS_INSTRUMENTATION_KEY" = azurerm_application_insights.appInsights.instrumentation_key
+    "WEBSITE_ENABLE_SYNC_UPDATE_SITE" = true
   }
 
   auth_settings {
@@ -35,10 +36,21 @@ resource "azurerm_function_app" "highScoreApi" {
 
   site_config {
     ftps_state = "Disabled"
+
+    cors {
+      allowed_origins     = ["*"]
+      support_credentials = false
+    }
   }
 
   identity {
     type = "SystemAssigned"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      app_settings["WEBSITE_RUN_FROM_PACKAGE"]
+    ]
   }
 
   tags = local.common_tags
