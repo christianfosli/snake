@@ -9,6 +9,10 @@ manually for state management.
 
 Something like this
 ```sh
+az group create --name rg-snake-staging --location norwayeast
+az storage account create --name stsnakestaging --resource-group rg-snake-staging
+az storage container create --account-name stsnakestaging --name tfstate
+
 az group create --name rg-snake-prod --location norwayeast
 az storage account create --name stsnakeprod --resource-group rg-snake-prod
 az storage container create --account-name stsnakeprod --name tfstate

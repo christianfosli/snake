@@ -30,8 +30,14 @@ enum GameStatus {
 pub fn run() -> Result<(), JsValue> {
     wasm_logger::init(wasm_logger::Config::default());
 
-    spawn_local(async {
-        fetch_and_set_highscores()
+    let highscore_base_url = option_env!("HIGHSCORE_API_BASE_URL").unwrap_or("");
+    log::debug!(
+        "Using highscore URL \"{:?}\". Blank string means relative to front-end.",
+        &highscore_base_url
+    );
+
+    spawn_local(async move {
+        fetch_and_set_highscores(&highscore_base_url)
             .await
             .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
     });
@@ -124,9 +130,11 @@ pub fn run() -> Result<(), JsValue> {
             };
             *game_status = GameStatus::GameOver;
             spawn_local(async move {
-                game_over(&dead_snake).await.unwrap_or_else(|err| {
-                    log::error!("End-of-Game actions failed due to {:?}", err)
-                });
+                game_over(&highscore_base_url, &dead_snake)
+                    .await
+                    .unwrap_or_else(|err| {
+                        log::error!("End-of-Game actions failed due to {:?}", err)
+                    });
             });
             return;
         }
@@ -150,7 +158,7 @@ pub fn run() -> Result<(), JsValue> {
     Ok(())
 }
 
-async fn game_over(snake: &Snake) -> Result<(), JsValue> {
+async fn game_over(highscore_url: &str, snake: &Snake) -> Result<(), JsValue> {
     write_on_canvas(
         &format!(
             "score: {} {}",
@@ -163,7 +171,7 @@ async fn game_over(snake: &Snake) -> Result<(), JsValue> {
         4,
     )?;
 
-    check_and_submit_highscore(snake.apple_count()).await?;
+    check_and_submit_highscore(highscore_url, snake.apple_count()).await?;
 
     Ok(())
 }

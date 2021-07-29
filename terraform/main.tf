@@ -1,9 +1,9 @@
 terraform {
   backend "azurerm" {
-    resource_group_name  = "rg-snake-prod"
-    storage_account_name = "stsnakeprod"
+    resource_group_name  = "rg-snake-staging"
+    storage_account_name = "stsnakestaging"
     container_name       = "tfstate"
-    key                  = "prod.terraform.tfstate"
+    key                  = "staging.terraform.tfstate"
   }
 
   required_providers {

@@ -20,8 +20,10 @@ env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 jobs:
-  plan_apply:
+  staging:
     runs-on: ubuntu-20.04
+    env:
+      TF_VAR_ENVIRONMENT: staging
     defaults:
       run:
         working-directory: terraform
@@ -38,7 +40,37 @@ jobs:
         run: terraform validate
 
       - name: Plan
-        run: terraform plan --input=false --refresh=true --lock=false --out "release.tfplan"
+        run: terraform plan --input=false --refresh=true --out "release.tfplan"
+
+      - name: Apply
+        run: terraform apply --input=false release.tfplan
+
+  prod:
+    if: github.event_name != 'pull_request'
+    needs: staging
+    runs-on: ubuntu-20.04
+    env:
+      TF_VAR_ENVIRONMENT: prod
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Init
+        run: |
+          terraform -v
+          terraform init --input=false \
+            -backend-config="resource_group_name=rg-snake-${{ env.TF_VAR_ENVIRONMENT }}" \
+            -backend-config="storage_account_name=stsnake${{ env.TF_VAR_ENVIRONMENT }}" \
+            -backend-config="key=${{ env.TF_VAR_ENVIRONMENT }}.terraform.tfstate"
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan
+        run: terraform plan --input=false --refresh=true release.tfplan"
 
       - name: Apply
         run: terraform apply --input=false release.tfplan

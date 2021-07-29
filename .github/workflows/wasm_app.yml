@@ -3,15 +3,9 @@ name: wasm_app
 on:
   push:
     branches: [master]
-    paths:
-      - front-end/**
-      - .github/workflows/wasm_app.yml
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches: [master]
-    paths:
-      - front-end/**
-      - .github/workflows/wasm_app.yml
 
 defaults:
   run:
@@ -27,11 +21,7 @@ jobs:
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
       - name: Cargo test
-        uses: actions-rs/cargo@v1.0.1
-        with:
-          command: test
-          toolchain: stable
-          args: --manifest-path front-end/Cargo.toml
+        run: cargo test
 
       - name: Wasm test
         run: wasm-pack test --headless --chrome
@@ -45,13 +35,24 @@ jobs:
 
       - name: Docker build
         run: |
+          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+            VERSION=pr_build_$(git rev-parse --short HEAD)
+            HIGHSCORE_API_BASE_URL=https://func-snakehighscores-staging.azurewebsites.net
+          else
+            VERSION=$(git rev-parse --short HEAD)
+            HIGHSCORE_API_BASE_URL=https://func-snakehighscores-prod.azurewebsites.net
+          fi
+          echo -e "VERSION $VERSION\nAPI_URL $HIGHSCORE_API_BASE_URL\n\n"
+
           docker build \
-            --build-arg VERSION=$(git rev-parse --short HEAD) \
-            -t snake-frontend:$(git rev-parse --short HEAD) \
+            --build-arg VERSION \
+            --build-arg HIGHSCORE_API_BASE_URL \
+            -t snake-frontend:$VERSION \
             -t snake-frontend:latest \
             .
         env:
           DOCKER_BUILDKIT: "1"
+
       - name: Extract files to deploy
         run: |
           container="$(docker create snake-frontend:latest)"

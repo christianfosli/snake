@@ -11,7 +11,7 @@ data "azurerm_storage_account" "st" {
 
 variable "ENVIRONMENT" {
   type    = string
-  default = "prod"
+  default = "staging"
 }
 
 locals {
