@@ -9,25 +9,26 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 
 ## Architecture 🏗
 
-The system consists of 3 parts
+* [Front-end application](https://www.playsnake.no) where snake is implemented with rust/webassembly.
 
- * Front-end application where snake is implemented with rust/webassembly
+  * Deployed as a Azure Static WebApp. When running locally with docker nginx is used.
 
- * Azure functions for setting and fetching highscores from a database
+* [API for working with highscores](https://highscores.playsnake.no), implemented as Azure functions.
 
- * MongoDB database
+* MongoDB database for persistence.
 
- **TODO: Update the diagram after switching DB provider**
- ![architecture diagram](./architecture.svg)
+* Azure KeyVault for safely providing function app with MongoDB connection string
+  (but when running locally we just use environment variables instead).
 
-We use a serverless approach, where the majority of the code is front-end.
+All the cloud infra is Infrastructure-as-Code managed by Terraform.
 
 ## Development 🐳
 
 Run all services with docker compose:
 
 ```console
-# Enable BuildKit if you haven't. This is one several ways to do so.
+# Enable BuildKit if you haven't.
+# This is one several ways to do so.
 export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
@@ -44,6 +45,8 @@ To stop all services and remove their containers:
 
 ```console
 docker compose down
+# or
+docker-compose down
 ```
 
 ### Required Tools

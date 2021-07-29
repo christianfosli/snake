@@ -66,6 +66,7 @@ resource "azurerm_app_service_custom_hostname_binding" "highScoreApi" {
 
 resource "azurerm_app_service_managed_certificate" "highScoreApi" {
   custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
+  tags                       = local.common_tags
 }
 
 resource "azurerm_app_service_certificate_binding" "highScoreApi" {

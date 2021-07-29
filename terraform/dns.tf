@@ -6,6 +6,7 @@ resource "azurerm_dns_zone" "playsnakePublic" {
 
   name                = "playsnake.no"
   resource_group_name = data.azurerm_resource_group.rg.name
+  tags                = local.common_tags
 }
 
 resource "azurerm_dns_cname_record" "app" {
@@ -16,6 +17,7 @@ resource "azurerm_dns_cname_record" "app" {
   resource_group_name = azurerm_dns_zone.playsnakePublic[0].resource_group_name
   ttl                 = 300
   target_resource_id  = azurerm_static_site.app[0].id
+  tags                = local.common_tags
 }
 
 resource "azurerm_dns_cname_record" "highScoreApi" {
@@ -24,4 +26,5 @@ resource "azurerm_dns_cname_record" "highScoreApi" {
   resource_group_name = "rg-snake-prod" # hardcoded because sometimes different env
   ttl                 = 300
   record              = azurerm_function_app.highScoreApi.default_hostname
+  tags                = local.common_tags
 }

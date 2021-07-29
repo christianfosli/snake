@@ -31,10 +31,7 @@ pub fn run() -> Result<(), JsValue> {
     wasm_logger::init(wasm_logger::Config::default());
 
     let highscore_base_url = option_env!("HIGHSCORE_API_BASE_URL").unwrap_or("");
-    log::debug!(
-        "Using highscore URL {:?}. Blank string means relative to front-end.",
-        &highscore_base_url
-    );
+    log::debug!("Using highscore api base url {:?}", &highscore_base_url);
 
     spawn_local(async move {
         fetch_and_set_highscores(&highscore_base_url)
