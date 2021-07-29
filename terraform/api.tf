@@ -35,7 +35,9 @@ resource "azurerm_function_app" "highScoreApi" {
   }
 
   site_config {
-    ftps_state = "Disabled"
+    ftps_state                = "Disabled"
+    http2_enabled             = true
+    use_32_bit_worker_process = false
 
     cors {
       allowed_origins     = ["*"]
@@ -54,4 +56,20 @@ resource "azurerm_function_app" "highScoreApi" {
   }
 
   tags = local.common_tags
+}
+
+resource "azurerm_app_service_custom_hostname_binding" "highScoreApi" {
+  hostname            = trimsuffix(azurerm_dns_cname_record.highScoreApi.fqdn, ".")
+  app_service_name    = azurerm_function_app.highScoreApi.name
+  resource_group_name = azurerm_function_app.highScoreApi.resource_group_name
+}
+
+resource "azurerm_app_service_managed_certificate" "highScoreApi" {
+  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
+}
+
+resource "azurerm_app_service_certificate_binding" "highScoreApi" {
+  hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
+  certificate_id      = azurerm_app_service_managed_certificate.highScoreApi.id
+  ssl_state           = "SniEnabled"
 }

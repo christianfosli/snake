@@ -13,3 +13,5 @@ resource "azurerm_static_site" "app" {
 
 # Manual Steps
 # - Associate with GitHub target repository
+# - Add custom domain (May be added to terraform soon)
+#   -> see https://github.com/terraform-providers/terraform-provider-azurerm/issues/11971
