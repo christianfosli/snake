@@ -35,8 +35,9 @@ resource "azurerm_function_app" "highScoreApi" {
   }
 
   site_config {
-    ftps_state    = "Disabled"
-    http2_enabled = true
+    ftps_state                = "Disabled"
+    http2_enabled             = true
+    use_32_bit_worker_process = false
 
     cors {
       allowed_origins     = ["*"]
