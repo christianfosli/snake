@@ -32,7 +32,7 @@ pub fn run() -> Result<(), JsValue> {
 
     let highscore_base_url = option_env!("HIGHSCORE_API_BASE_URL").unwrap_or("");
     log::debug!(
-        "Using highscore URL \"{:?}\". Blank string means relative to front-end.",
+        "Using highscore URL {:?}. Blank string means relative to front-end.",
         &highscore_base_url
     );
 
