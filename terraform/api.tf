@@ -56,3 +56,9 @@ resource "azurerm_function_app" "highScoreApi" {
 
   tags = local.common_tags
 }
+
+resource "azurerm_app_service_custom_hostname_binding" "highScoreApi" {
+  hostname            = trimsuffix(azurerm_dns_cname_record.highScoreApi.fqdn, ".")
+  app_service_name    = azurerm_function_app.highScoreApi.name
+  resource_group_name = azurerm_function_app.highScoreApi.resource_group_name
+}
