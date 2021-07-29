@@ -30,30 +30,33 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-20.04
     name: Build and Deploy
+    env:
+      DOCKER_BUILDKIT: "1"
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set variables for staging
+        if: github.event_name == 'pull_request'
+        run: |
+            export BUILD_VERSION=pr_build_$(git rev-parse --short HEAD)
+            export HIGHSCORE_API_BASE_URL=https://func-snakehighscores-staging.azurewebsites.net
+            echo "$VERSION\n$HIGHSCORE_API_BASE_URL"
+
+      - name: Set variables for prod
+        if: github.event_name != 'pull_request'
+        run: |
+            export BUILD_VERSION=$(git rev-parse --short HEAD)
+            export HIGHSCORE_API_BASE_URL=https://func-snakehighscores-prod.azurewebsites.net
+            echo "$VERSION\n$HIGHSCORE_API_BASE_URL"
+
       - name: Docker build
         run: |
-          echo "Setting variables"
-          if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-            VERSION=pr_build_$(git rev-parse --short HEAD)
-            HIGHSCORE_API_BASE_URL=https://func-snakehighscores-staging.azurewebsites.net
-          else
-            VERSION=$(git rev-parse --short HEAD)
-            HIGHSCORE_API_BASE_URL=https://func-snakehighscores-prod.azurewebsites.net
-          fi
-          echo -e "VERSION $VERSION\nAPI_URL $HIGHSCORE_API_BASE_URL\n\n"
-
-          echo "Starting build"
           docker build \
-            --build-arg VERSION=$VERSION \
+            --build-arg VERSION=$BUILD_VERSION \
             --build-arg HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL \
-            -t snake-frontend:$VERSION \
+            -t snake-frontend:$BUILD_VERSION \
             -t snake-frontend:latest \
             .
-        env:
-          DOCKER_BUILDKIT: "1"
 
       - name: Extract files to deploy
         run: |
