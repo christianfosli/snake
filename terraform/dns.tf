@@ -18,10 +18,10 @@ resource "azurerm_dns_cname_record" "app" {
   target_resource_id  = azurerm_static_site.app[0].id
 }
 
-resource "azurerm_dns_cname_record" "highscoreApi" {
+resource "azurerm_dns_cname_record" "highScoreApi" {
   name                = var.ENVIRONMENT == "prod" ? "highscores" : "highscores-${var.ENVIRONMENT}"
   zone_name           = "playsnake.no"  # hardcoded because sometimes different env
   resource_group_name = "rg-snake-prod" # hardcoded because sometimes different env
   ttl                 = 300
-  record              = azurerm_function_app.highscoreApi.default_hostname
+  record              = azurerm_function_app.highScoreApi.default_hostname
 }
