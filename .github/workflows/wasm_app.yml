@@ -39,13 +39,13 @@ jobs:
         if: github.event_name == 'pull_request'
         run: |
             echo "BUILD_VERSION=pr_build_$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-            echo "HIGHSCORE_API_BASE_URL=https://func-snakehighscores-staging.azurewebsites.net" >> $GITHUB_ENV
+            echo "HIGHSCORE_API_BASE_URL=https://highscores-staging.playsnake.no" >> $GITHUB_ENV
 
       - name: Set variables for prod
         if: github.event_name != 'pull_request'
         run: |
             echo "BUILD_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-            echo "HIGHSCORE_API_BASE_URL=https://func-snakehighscores-prod.azurewebsites.net" >> $GITHUB_ENV
+            echo "HIGHSCORE_API_BASE_URL=https://highscores.playsnake.no" >> $GITHUB_ENV
 
       - name: Docker build
         run: |
