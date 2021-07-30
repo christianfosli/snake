@@ -1,8 +1,9 @@
 use js_sys::Error;
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::{JsCast, JsValue};
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{HtmlElement, Request, RequestInit, RequestMode, Response};
+use web_sys::HtmlElement;
+
+use crate::services::highscore_api::HighScoreApi;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HighScore {
@@ -20,7 +21,7 @@ impl HighScore {
     }
 }
 
-pub async fn fetch_and_set_highscores(base_url: &str) -> Result<(), JsValue> {
+pub async fn fetch_and_set_highscores(client: &HighScoreApi) -> Result<(), JsValue> {
     let window = web_sys::window().ok_or("Window was none")?;
 
     let tbody = window
@@ -30,7 +31,7 @@ pub async fn fetch_and_set_highscores(base_url: &str) -> Result<(), JsValue> {
         .map(|table| table.dyn_into::<HtmlElement>())
         .ok_or_else(|| Error::new("Highscore table was not a HtmlElement???"))??;
 
-    let html = match fetch_highscores(&base_url).await {
+    let html = match client.top_ten(None).await {
         Ok(highscores) => highscores
             .iter()
             .map(|h| h.to_table_row())
@@ -46,30 +47,11 @@ pub async fn fetch_and_set_highscores(base_url: &str) -> Result<(), JsValue> {
     Ok(())
 }
 
-pub async fn fetch_highscores(base_url: &str) -> Result<Vec<HighScore>, JsValue> {
-    let mut options = RequestInit::new();
-    options.method("GET").mode(RequestMode::Cors);
-
-    let request = Request::new_with_str_and_init(&format!("{}/api/topten", base_url), &options)?;
-    request.headers().set("Accept", "application/json")?;
-
-    let window = web_sys::window().ok_or_else(|| Error::new("Windows was none"))?;
-
-    let res: Response = JsFuture::from(window.fetch_with_request(&request))
-        .await?
-        .dyn_into()?;
-
-    let json = JsFuture::from(res.json()?).await?;
-
-    let highscores: Vec<HighScore> = json
-        .into_serde()
-        .map_err(|e| Error::new(&format!("Serialization failed due to {}", e)))?;
-
-    Ok(highscores)
-}
-
-pub async fn check_and_submit_highscore(base_url: &str, score: usize) -> Result<(), JsValue> {
-    let top_scores = fetch_highscores(base_url).await?;
+pub async fn check_and_submit_highscore(
+    client: &HighScoreApi,
+    score: usize,
+) -> Result<(), JsValue> {
+    let top_scores = client.top_ten(None).await?;
     if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
         log::debug!("Score {} is a highscore!", score);
 
@@ -83,35 +65,7 @@ pub async fn check_and_submit_highscore(base_url: &str, score: usize) -> Result<
                 }
             };
 
-        let json = serde_json::to_string(&HighScore { user_name, score })
-            .map_err(|e| Error::new(&format!("Error during deserialization: {:?}", e)))?;
-
-        let mut options = RequestInit::new();
-        options
-            .method("POST")
-            .mode(RequestMode::Cors)
-            .body(Some(&json.into()));
-
-        let request =
-            Request::new_with_str_and_init(&format!("{}/api/submit", base_url), &options)?;
-
-        request.headers().set("Accept", "application/json")?;
-        request.headers().set("Content-Type", "application/json")?;
-
-        let res: Response = JsFuture::from(window.fetch_with_request(&request))
-            .await?
-            .dyn_into()?;
-
-        match res.ok() {
-            true => {
-                log::info!("Highscore submitted successfully");
-                fetch_and_set_highscores(base_url).await?;
-            }
-            false => {
-                log::error!("failed to submit highscore");
-                return Err(Error::new("Failed to submit highscore").into());
-            }
-        }
+        client.submit(&HighScore { user_name, score }).await?;
     }
     Ok(())
 }
