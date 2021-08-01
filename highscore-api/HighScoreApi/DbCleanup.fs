@@ -17,13 +17,39 @@ module DbCleanup =
             .Value
 
     let removeNonTopHighScores (collection: IMongoCollection<HighScoreDocument>) =
+        let dateThisYearFilter =
+            Builders<HighScoreDocument>.Filter.Gt
+                ((fun s -> s.TimeStamp), DateTimeOffset(DateTimeOffset.UtcNow.Year, 0, 0, 0, 0, 0, TimeSpan.Zero))
+
         let sortByScore =
             Builders<HighScoreDocument>
                 .Sort.Descending(fun s -> s.Score :> obj)
                 .Ascending(fun s -> s.TimeStamp :> obj)
 
-        let toDelete = collection.Find(fun _ -> true).Sort(sortByScore).Skip(15).ToList() |> Seq.map (fun x -> x.Id)
-        let deleteFilter = Builders<HighScoreDocument>.Filter.In((fun x -> x.Id), toDelete)
+        let okToDeleteAllTime =
+            collection
+                .Find(fun _ -> true)
+                .Sort(sortByScore)
+                .Skip(15)
+                .ToList()
+            |> Seq.map (fun x -> x.Id)
+            |> Set.ofSeq
+
+        let okToDeleteYearly =
+            collection
+                .Find(dateThisYearFilter)
+                .Sort(sortByScore)
+                .Skip(15)
+                .ToList()
+            |> Seq.map (fun x -> x.Id)
+            |> Set.ofSeq
+
+        let toDelete =
+            okToDeleteAllTime
+            |> Set.intersect okToDeleteYearly
+
+        let deleteFilter =
+            Builders<HighScoreDocument>.Filter.In ((fun x -> x.Id), toDelete)
 
         let result = collection.DeleteMany(deleteFilter)
         result.DeletedCount
