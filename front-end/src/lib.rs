@@ -18,6 +18,9 @@ use crate::vi::*;
 mod highscores;
 use crate::highscores::*;
 
+mod services;
+use crate::services::highscore_api::HighScoreApi;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum GameStatus {
     NotStarted,
@@ -34,7 +37,8 @@ pub fn run() -> Result<(), JsValue> {
     log::debug!("Using highscore api base url {:?}", &highscore_base_url);
 
     spawn_local(async move {
-        fetch_and_set_highscores(&highscore_base_url)
+        let highscore_api = HighScoreApi::new(highscore_base_url.to_owned());
+        fetch_and_set_highscores(&highscore_api)
             .await
             .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
     });
@@ -127,7 +131,9 @@ pub fn run() -> Result<(), JsValue> {
             };
             *game_status = GameStatus::GameOver;
             spawn_local(async move {
-                game_over(&highscore_base_url, &dead_snake)
+                let highscore_api = HighScoreApi::new(highscore_base_url.into());
+
+                game_over(&highscore_api, &dead_snake)
                     .await
                     .unwrap_or_else(|err| {
                         log::error!("End-of-Game actions failed due to {:?}", err)
@@ -155,12 +161,15 @@ pub fn run() -> Result<(), JsValue> {
     Ok(())
 }
 
-async fn game_over(highscore_url: &str, snake: &Snake) -> Result<(), JsValue> {
+async fn game_over(highscore_api: &HighScoreApi, snake: &Snake) -> Result<(), JsValue> {
+    let apple_count = snake.apple_count();
+    log::debug!("Game over with {} apples eaten", apple_count);
+
     write_on_canvas(
         &format!(
             "score: {} {}",
-            snake.apple_count(),
-            match snake.apple_count() {
+            apple_count,
+            match apple_count {
                 1 => "apple",
                 _ => "apples",
             }
@@ -168,7 +177,11 @@ async fn game_over(highscore_url: &str, snake: &Snake) -> Result<(), JsValue> {
         4,
     )?;
 
-    check_and_submit_highscore(highscore_url, snake.apple_count()).await?;
+    log::debug!("Checking if score is a highscore");
+    check_and_submit_highscore(highscore_api, apple_count).await?;
+
+    log::debug!("Refreshing highscore tables");
+    fetch_and_set_highscores(highscore_api).await?;
 
     Ok(())
 }

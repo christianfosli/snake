@@ -74,15 +74,34 @@
         </div>
       </div>
       <aside>
-        <h2>Top Scores</h2>
-        <table>
+        <h2>Top Ten All Time</h2>
+        <table id="topten-alltime">
           <thead>
             <tr>
               <th>UserName</th>
               <th>Score</th>
             </tr>
           </thead>
-          <tbody id="highscore-tbody">
+          <tbody>
+            <tr>
+              <td colspan="2">Loading highscores... Please wait.</td>
+            </tr>
+            <tr>
+              <td colspan="2">The database might be sleeping 😴.</td>
+            </tr>
+          </tbody>
+        </table>
+      </aside>
+      <aside>
+        <h2>Top Ten This Year</h2>
+        <table id="topten-yearly">
+          <thead>
+            <tr>
+              <th>UserName</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+          <tbody>
             <tr>
               <td colspan="2">Loading highscores... Please wait.</td>
             </tr>

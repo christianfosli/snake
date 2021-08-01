@@ -1,5 +1,6 @@
 namespace HighScoreApi
 
+open System
 open System.Net
 open Microsoft.Azure.Functions.Worker
 open Microsoft.Azure.Functions.Worker.Http
@@ -11,7 +12,12 @@ open HighScoreApi.Common.Dto
 
 module TopTen =
 
-    let topten (collection: IMongoCollection<HighScoreDocument>) =
+    let topten (collection: IMongoCollection<HighScoreDocument>) (since: Option<DateTimeOffset>) =
+        let dateFilter =
+            match since with
+            | Some dte -> Builders<HighScoreDocument>.Filter.Gt ((fun s -> s.TimeStamp), dte)
+            | None -> Builders<HighScoreDocument>.Filter.Empty
+
         let sortByScore =
             Builders<HighScoreDocument>
                 .Sort.Descending(fun s -> s.Score :> obj)
@@ -21,7 +27,7 @@ module TopTen =
             try
                 let! topten =
                     collection
-                        .Find(fun _ -> true)
+                        .Find(dateFilter)
                         .Sort(sortByScore)
                         .Limit(10)
                         .ToListAsync()
@@ -37,40 +43,60 @@ module TopTen =
 
         }
 
+    let dateFromQueryParam (ctx: FunctionContext) (paramName: string) : Result<Option<DateTimeOffset>, string> =
+        if ctx.BindingContext.BindingData.ContainsKey(paramName) then
+            let dateStr =
+                ctx.BindingContext.BindingData.[paramName] :?> string
+
+            let couldParse, parsedDate = DateTimeOffset.TryParse dateStr
+
+            if couldParse then
+                Some parsedDate |> Ok
+            else
+                Error $"Unable to parse %s{dateStr} as a date"
+        else
+            Ok None
+
 
     [<Function("TopTen")>]
-    let run
-        ([<HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)>] req: HttpRequestData)
-        (ctx: FunctionContext)
-        =
+    let run ([<HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)>] req: HttpRequestData) (ctx: FunctionContext) =
         let log = ctx.GetLogger()
 
         async {
-            let! topScores = topten DbUtils.highscores
+            match dateFromQueryParam ctx "since" with
+            | Ok since ->
+                log.LogInformation $"Finding topten since %A{since}"
 
-            return
+                let! topScores = topten DbUtils.highscores since
+
                 match topScores with
                 | Ok scores ->
-                    Seq.length scores
-                    |> sprintf "%d scores retrieved successfully"
-                    |> log.LogInformation
-
+                    log.LogInformation $"%d{Seq.length scores} scores found"
                     let res = req.CreateResponse HttpStatusCode.OK
 
-                    res.WriteAsJsonAsync(scores).AsTask()
-                    |> Async.AwaitTask
-                    |> Async.RunSynchronously
+                    do!
+                        res.WriteAsJsonAsync(scores).AsTask()
+                        |> Async.AwaitTask
 
-                    res
+                    return res
 
                 | Error e ->
-                    sprintf "Failed to get top ten: %A" e
-                    |> log.LogError
+                    log.LogError $"Failed to get top ten due to %A{e}"
 
                     let res =
                         req.CreateResponse HttpStatusCode.InternalServerError
 
-                    res.WriteString "An error occured trying to fetch topten. Details in server logs."
-                    res
+                    do!
+                        res.WriteStringAsync "Server error trying to fetch topten from database."
+                        |> Async.AwaitTask
+
+                    return res
+
+            | Error parseError ->
+                let res =
+                    req.CreateResponse HttpStatusCode.BadRequest
+
+                do! res.WriteStringAsync parseError |> Async.AwaitTask
+                return res
         }
         |> Async.StartAsTask
