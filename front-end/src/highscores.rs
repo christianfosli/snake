@@ -1,4 +1,5 @@
-use js_sys::Error;
+use chrono::prelude::*;
+use js_sys::{Date, Error};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::HtmlElement;
@@ -22,27 +23,44 @@ impl HighScore {
 }
 
 pub async fn fetch_and_set_highscores(client: &HighScoreApi) -> Result<(), JsValue> {
-    let window = web_sys::window().ok_or("Window was none")?;
-
-    let tbody = window
+    let dom = web_sys::window()
+        .ok_or_else(|| Error::new("Window was none"))?
         .document()
-        .map(|doc| doc.query_selector("#highscore-tbody"))
-        .ok_or_else(|| Error::new("Cant find highscore table"))??
-        .map(|table| table.dyn_into::<HtmlElement>())
-        .ok_or_else(|| Error::new("Highscore table was not a HtmlElement???"))??;
+        .ok_or_else(|| Error::new("Window contains no document"))?;
 
-    let html = match client.top_ten(None).await {
-        Ok(highscores) => highscores
-            .iter()
-            .map(|h| h.to_table_row())
-            .collect::<String>(),
-        Err(e) => {
-            log::error!("Failed to fetch highscores due to {:?}", e);
-            String::from("<tr><td colspan=\"2\">Failed to fetch :-(</td></tr>")
-        }
-    };
+    let topten_alltime_fut = client.top_ten(None);
 
-    tbody.set_inner_html(&html);
+    let start_of_year = Utc
+        .ymd(Date::new_0().get_utc_full_year() as i32, 1, 1)
+        .and_hms(0, 0, 0);
+
+    let topten_yearly_fut = client.top_ten(Some(start_of_year));
+
+    let topten_alltime_html = topten_alltime_fut
+        .await
+        .map(|hs| hs.iter().map(|hs| hs.to_table_row()).collect::<String>())
+        .unwrap_or_else(|err| {
+            log::error!("Error fetching top ten alltime: {:?}", err);
+            String::from("<tr><td colspan=\"2\">Failed to fetch top ten alltime 😩</td></tr>")
+        });
+
+    dom.query_selector("#topten-alltime tbody")?
+        .ok_or_else(|| Error::new("Cant find topten alltime table"))
+        .map(|table| table.dyn_into::<HtmlElement>())?
+        .map(|table| table.set_inner_html(&topten_alltime_html))?;
+
+    let topten_yearly_html = topten_yearly_fut
+        .await
+        .map(|hs| hs.iter().map(|hs| hs.to_table_row()).collect::<String>())
+        .unwrap_or_else(|err| {
+            log::error!("Error fetching top ten yearly: {:?}", err);
+            String::from("<tr><td colspan=\"2\">Failed to fetch top ten this year 😩</td></tr>")
+        });
+
+    dom.query_selector("#topten-yearly tbody")?
+        .ok_or_else(|| Error::new("Cant find topten yearly table"))
+        .map(|table| table.dyn_into::<HtmlElement>())?
+        .map(|table| table.set_inner_html(&topten_yearly_html))?;
 
     Ok(())
 }
@@ -56,17 +74,16 @@ pub async fn check_and_submit_highscore(
         log::debug!("Score {} is a highscore!", score);
 
         let window = web_sys::window().ok_or_else(|| Error::new("Window was none"))?;
-        let user_name =
-            match window.prompt_with_message("Please enter your name for the highscore table")? {
-                Some(v) => v,
-                None => {
-                    log::warn!("highscore submission aborted as no username given");
-                    return Ok(());
-                }
-            };
+        let highscore = window
+            .prompt_with_message("Please enter your name for the highscore table")?
+            .map(|user_name| HighScore { user_name, score });
 
-        client.submit(&HighScore { user_name, score }).await?;
+        match &highscore {
+            Some(hs) => client.submit(hs).await?,
+            None => log::warn!("highscore submission aborted because no username given"),
+        };
     }
+
     Ok(())
 }
 

@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use js_sys::Error;
+use serde::Serialize;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::RequestInit;
@@ -9,6 +10,11 @@ use crate::highscores::HighScore;
 
 pub struct HighScoreApi {
     base_url: String,
+}
+
+#[derive(Serialize)]
+struct QueryParams {
+    since: DateTime<Utc>,
 }
 
 impl HighScoreApi {
@@ -21,7 +27,12 @@ impl HighScoreApi {
         options.method("GET").mode(RequestMode::Cors);
 
         let request_url = match since {
-            Some(date) => format!("{}/api/topten?since={}", self.base_url, date),
+            Some(since) => {
+                let query_params = serde_qs::to_string(&QueryParams { since })
+                    .map_err(|e| Error::new(&format!("Serialize error: {:?}", e)))?;
+
+                format!("{}/api/topten?{}", self.base_url, query_params)
+            }
             None => format!("{}/api/topten", self.base_url),
         };
 
