@@ -69,8 +69,13 @@ pub async fn check_and_submit_highscore(
     client: &HighScoreApi,
     score: usize,
 ) -> Result<(), JsValue> {
-    let top_scores = client.top_ten(None).await?;
-    if top_scores.len() < 10 || top_scores.iter().any(|hs| hs.score < score) {
+    let start_of_year = Utc
+        .ymd(Date::new_0().get_utc_full_year() as i32, 1, 1)
+        .and_hms(0, 0, 0);
+
+    let top_yearly_scores = client.top_ten(Some(start_of_year)).await?;
+
+    if top_yearly_scores.len() < 10 || top_yearly_scores.iter().any(|hs| hs.score < score) {
         log::debug!("Score {} is a highscore!", score);
 
         let window = web_sys::window().ok_or_else(|| Error::new("Window was none"))?;
