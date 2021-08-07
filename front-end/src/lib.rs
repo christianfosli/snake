@@ -1,5 +1,6 @@
 use futures::stream::StreamExt;
 use gloo_timers::callback::Interval;
+use js_sys::Error;
 use std::{
     f64::consts::PI,
     sync::{Arc, Mutex},
@@ -43,11 +44,9 @@ pub fn run() -> Result<(), JsValue> {
             .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
     });
     add_canvas()?;
-    write_on_canvas("Press <space>", 3)?;
-    write_on_canvas("to begin", 4)?;
+    update_status_in_statusbar(&GameStatus::NotStarted)?;
 
     let snake = Snake::new();
-
     let game_status_ptr = Arc::new(Mutex::new(GameStatus::NotStarted));
     let game_status_ptr_2 = Arc::clone(&game_status_ptr);
     let direction_ptr = Arc::new(Mutex::new(snake.direction));
@@ -68,9 +67,15 @@ pub fn run() -> Result<(), JsValue> {
                         *snake = Snake::new();
                         *direction_ptr_2.lock().unwrap() = snake.direction;
                     }
+
                     *game_status = GameStatus::Playing;
+                    update_status_in_statusbar(&game_status).unwrap_or_else(|e| {
+                        log::error!("Failed to update game status due to {:?}", e)
+                    });
+
                     clear_screen()
                         .unwrap_or_else(|e| log::error!("Failed to clear screen due to {:?}", e));
+
                     draw_snake(&snake)
                         .unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
                     draw_apple(&snake.target.expect("target was undefined"))
@@ -111,6 +116,14 @@ pub fn run() -> Result<(), JsValue> {
     };
 
     spawn_local(keylistener);
+
+    let apple_counter: HtmlElement = web_sys::window()
+        .ok_or_else(|| Error::new("Window was none"))?
+        .document()
+        .ok_or_else(|| Error::new("Window had no document"))?
+        .query_selector("#apple-counter")?
+        .map(|x| x.dyn_into())
+        .ok_or_else(|| Error::new("Document had no apple counter"))??;
 
     Interval::new(300, move || {
         let mut game_status = game_status_ptr_2.lock().unwrap();
@@ -155,6 +168,7 @@ pub fn run() -> Result<(), JsValue> {
                 .unwrap_or_else(|e| log::error!("Failed to write on canvas due to {:?}", e)),
         }
         draw_snake(&snake).unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
+        apple_counter.set_inner_text(&format!("🍎{}", snake.apple_count()));
     })
     .forget();
 
@@ -164,6 +178,8 @@ pub fn run() -> Result<(), JsValue> {
 async fn game_over(highscore_api: &HighScoreApi, snake: &Snake) -> Result<(), JsValue> {
     let apple_count = snake.apple_count();
     log::debug!("Game over with {} apples eaten", apple_count);
+
+    update_status_in_statusbar(&GameStatus::GameOver)?;
 
     write_on_canvas(
         &format!(
@@ -188,10 +204,6 @@ async fn game_over(highscore_api: &HighScoreApi, snake: &Snake) -> Result<(), Js
 
 fn add_canvas() -> Result<(), JsValue> {
     let document = web_sys::window().unwrap().document().unwrap();
-    let main_section = match document.query_selector("#phone")? {
-        Some(v) => v.dyn_into::<HtmlElement>()?,
-        None => document.body().unwrap(),
-    };
 
     let canvas = document
         .create_element("canvas")?
@@ -200,7 +212,12 @@ fn add_canvas() -> Result<(), JsValue> {
     canvas.set_width(snake::WIDTH);
     canvas.set_height(snake::HEIGHT);
 
-    main_section.insert_adjacent_element("afterbegin", &canvas)?;
+    let insert_after = match document.query_selector("#phone .statusbar")? {
+        Some(v) => v.dyn_into::<HtmlElement>()?,
+        None => document.body().unwrap(),
+    };
+
+    insert_after.insert_adjacent_element("afterend", &canvas)?;
 
     Ok(())
 }
@@ -268,5 +285,25 @@ fn write_on_canvas(text: &str, row: u8) -> Result<(), JsValue> {
     context.set_font("30px monospace");
     context.set_fill_style(&"blue".into());
     context.fill_text(text, 10.0, row as f64 * snake::LINE_THICKNESS)?;
+    Ok(())
+}
+
+fn update_status_in_statusbar(status: &GameStatus) -> Result<(), JsValue> {
+    let game_status_element: HtmlElement = web_sys::window()
+        .ok_or_else(|| Error::new("Window was none"))?
+        .document()
+        .ok_or_else(|| Error::new("Window had no document"))?
+        .query_selector("#game-status")?
+        .map(|x| x.dyn_into())
+        .ok_or_else(|| Error::new("Document had no game status element"))??;
+
+    let status_text = match *status {
+        GameStatus::NotStarted => "Press <space> to start",
+        GameStatus::GameOver => "Restart with <space>",
+        GameStatus::Playing => "Playing 🐍",
+    };
+
+    game_status_element.set_inner_text(&status_text);
+
     Ok(())
 }
