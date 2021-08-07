@@ -212,12 +212,16 @@ fn add_canvas() -> Result<(), JsValue> {
     canvas.set_width(snake::WIDTH);
     canvas.set_height(snake::HEIGHT);
 
-    let insert_after = match document.query_selector("#phone .statusbar")? {
-        Some(v) => v.dyn_into::<HtmlElement>()?,
-        None => document.body().unwrap(),
+    match document
+        .query_selector("#phone .statusbar")?
+        .map(|el| el.dyn_into::<HtmlElement>().unwrap())
+    {
+        Some(status_bar) => status_bar.insert_adjacent_element("afterend", &canvas)?,
+        None => document
+            .body()
+            .unwrap()
+            .insert_adjacent_element("afterbegin", &canvas)?,
     };
-
-    insert_after.insert_adjacent_element("afterend", &canvas)?;
 
     Ok(())
 }
