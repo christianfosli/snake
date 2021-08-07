@@ -44,7 +44,7 @@ pub fn run() -> Result<(), JsValue> {
             .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
     });
     add_canvas()?;
-    update_status_in_statusbar(&GameStatus::NotStarted)?;
+    update_status_in_statusbar(&GameStatus::NotStarted).unwrap_or_else(|e| log::error!("{:?}", e));
 
     let snake = Snake::new();
     let game_status_ptr = Arc::new(Mutex::new(GameStatus::NotStarted));
