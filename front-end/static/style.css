@@ -45,6 +45,15 @@ footer p {
   border-radius: 1rem;
 }
 
+.statusbar {
+  background-color: lightcyan;
+  font-size: 1rem;
+  padding: 0.25rem;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: solid 0.1rem darkslategray;
+}
+
 .break {
   flex-basis: 100%;
   height: 0;
