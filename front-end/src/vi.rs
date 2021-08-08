@@ -1,7 +1,7 @@
 use crate::Direction;
 use futures::channel::mpsc;
 use futures::stream::Stream;
-use gloo_events::EventListener;
+use gloo_events::{EventListener, EventListenerOptions};
 use std::pin::Pin;
 use std::task::{Context, Poll};
 use wasm_bindgen::JsCast;
@@ -22,25 +22,30 @@ pub enum ViCommand {
 impl Vi {
     pub fn new(target: &EventTarget) -> Self {
         let (sender, receiver) = mpsc::unbounded();
-        let listener = EventListener::new(&target, "keydown", move |event| {
-            let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
-            let key: &str = &event.key();
-            let dir: Option<ViCommand> = match key {
-                "h" | "ArrowLeft" => Some(ViCommand::Move(Direction::Left)),
-                "j" | "ArrowDown" => Some(ViCommand::Move(Direction::Down)),
-                "k" | "ArrowUp" => Some(ViCommand::Move(Direction::Up)),
-                "l" | "ArrowRight" => Some(ViCommand::Move(Direction::Right)),
-                " " => Some(ViCommand::Start),
-                "q" => Some(ViCommand::Stop),
-                "?" => Some(ViCommand::Help),
-                _ => None,
-            };
+        let listener = EventListener::new_with_options(
+            &target,
+            "keydown",
+            EventListenerOptions::enable_prevent_default(),
+            move |event| {
+                let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
+                let key: &str = &event.key();
+                let dir: Option<ViCommand> = match key {
+                    "h" | "ArrowLeft" => Some(ViCommand::Move(Direction::Left)),
+                    "j" | "ArrowDown" => Some(ViCommand::Move(Direction::Down)),
+                    "k" | "ArrowUp" => Some(ViCommand::Move(Direction::Up)),
+                    "l" | "ArrowRight" => Some(ViCommand::Move(Direction::Right)),
+                    " " => Some(ViCommand::Start),
+                    "q" => Some(ViCommand::Stop),
+                    "?" => Some(ViCommand::Help),
+                    _ => None,
+                };
 
-            if let Some(dir) = dir {
-                event.prevent_default();
-                sender.unbounded_send(dir).unwrap()
-            };
-        });
+                if let Some(dir) = dir {
+                    event.prevent_default();
+                    sender.unbounded_send(dir).unwrap()
+                };
+            },
+        );
 
         Self { receiver, listener }
     }
