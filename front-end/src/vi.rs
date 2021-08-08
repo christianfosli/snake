@@ -1,8 +1,9 @@
-use crate::Direction;
+use crate::{Direction, GameStatus};
 use futures::channel::mpsc;
 use futures::stream::Stream;
 use gloo_events::{EventListener, EventListenerOptions};
 use std::pin::Pin;
+use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
 use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, KeyboardEvent};
@@ -12,6 +13,7 @@ pub struct Vi {
     pub listener: EventListener,
 }
 
+#[derive(Debug)]
 pub enum ViCommand {
     Start,
     Stop,
@@ -20,7 +22,7 @@ pub enum ViCommand {
 }
 
 impl Vi {
-    pub fn new(target: &EventTarget) -> Self {
+    pub fn new(target: &EventTarget, status: Arc<RwLock<GameStatus>>) -> Self {
         let (sender, receiver) = mpsc::unbounded();
         let listener = EventListener::new_with_options(
             &target,
@@ -29,12 +31,21 @@ impl Vi {
             move |event| {
                 let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
                 let key: &str = &event.key();
+                let status = *status.read().unwrap();
                 let dir: Option<ViCommand> = match key {
-                    "h" | "ArrowLeft" => Some(ViCommand::Move(Direction::Left)),
-                    "j" | "ArrowDown" => Some(ViCommand::Move(Direction::Down)),
-                    "k" | "ArrowUp" => Some(ViCommand::Move(Direction::Up)),
-                    "l" | "ArrowRight" => Some(ViCommand::Move(Direction::Right)),
-                    " " => Some(ViCommand::Start),
+                    "h" | "ArrowLeft" if status == GameStatus::Playing => {
+                        Some(ViCommand::Move(Direction::Left))
+                    }
+                    "j" | "ArrowDown" if status == GameStatus::Playing => {
+                        Some(ViCommand::Move(Direction::Down))
+                    }
+                    "k" | "ArrowUp" if status == GameStatus::Playing => {
+                        Some(ViCommand::Move(Direction::Up))
+                    }
+                    "l" | "ArrowRight" if status == GameStatus::Playing => {
+                        Some(ViCommand::Move(Direction::Right))
+                    }
+                    " " if status != GameStatus::Playing => Some(ViCommand::Start),
                     "q" => Some(ViCommand::Stop),
                     "?" => Some(ViCommand::Help),
                     _ => None,
