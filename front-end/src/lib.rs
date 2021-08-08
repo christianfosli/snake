@@ -80,7 +80,7 @@ pub fn run() -> Result<(), JsValue> {
                     }
 
                     *game_status = GameStatus::Playing;
-                    update_status_in_statusbar(&game_status).unwrap_or_else(|e| {
+                    update_status_in_statusbar(&document, &game_status).unwrap_or_else(|e| {
                         log::error!("Failed to update game status due to {:?}", e)
                     });
 
@@ -200,7 +200,7 @@ async fn game_over(
     let apple_count = snake.apple_count();
     log::debug!("Game over with {} apples eaten", apple_count);
 
-    update_status_in_statusbar(&GameStatus::GameOver)?;
+    update_status_in_statusbar(document, &GameStatus::GameOver)?;
 
     write_on_canvas(
         document,
@@ -319,16 +319,13 @@ fn add_statusbar(document: &Document, parent: &HtmlElement) -> Result<(), JsValu
 
     parent.insert_adjacent_element("afterbegin", &statusbar)?;
 
-    update_status_in_statusbar(&GameStatus::NotStarted)?;
+    update_status_in_statusbar(document, &GameStatus::NotStarted)?;
 
     Ok(())
 }
 
-fn update_status_in_statusbar(status: &GameStatus) -> Result<(), JsValue> {
-    let game_status_element: HtmlElement = web_sys::window()
-        .ok_or_else(|| Error::new("Window was none"))?
-        .document()
-        .ok_or_else(|| Error::new("Window had no document"))?
+fn update_status_in_statusbar(document: &Document, status: &GameStatus) -> Result<(), JsValue> {
+    let game_status_element: HtmlElement = document
         .query_selector("#game-status")?
         .map(|x| x.dyn_into())
         .ok_or_else(|| Error::new("Document had no game status element"))??;
