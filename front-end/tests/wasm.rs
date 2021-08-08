@@ -3,7 +3,7 @@ use wasm_bindgen_test::*;
 wasm_bindgen_test_configure!(run_in_browser);
 
 #[wasm_bindgen_test]
-fn it_should_have_a_canvas_element() {
+fn it_starts_without_crashing() {
     visnake::run().expect("Failed to start");
     let document = web_sys::window()
         .expect("No window exists")

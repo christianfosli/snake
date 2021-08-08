@@ -8,7 +8,7 @@ use std::{
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
 use wasm_bindgen_futures::spawn_local;
-use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, HtmlElement};
+use web_sys::{CanvasRenderingContext2d, Document, HtmlCanvasElement, HtmlElement};
 
 mod snake;
 use crate::snake::*;
@@ -43,8 +43,19 @@ pub fn run() -> Result<(), JsValue> {
             .await
             .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
     });
-    add_canvas()?;
-    update_status_in_statusbar(&GameStatus::NotStarted).unwrap_or_else(|e| log::error!("{:?}", e));
+
+    let document = web_sys::window()
+        .ok_or_else(|| Error::new("Window was none"))?
+        .document()
+        .ok_or_else(|| Error::new("Window had no document"))?;
+
+    let container: HtmlElement = document
+        .query_selector("main #phone")?
+        .ok_or_else(|| document.query_selector("body").unwrap())
+        .map(|el| el.dyn_into())??;
+
+    add_statusbar(&document, &container)?;
+    add_canvas(&document, &container)?;
 
     let snake = Snake::new();
     let game_status_ptr = Arc::new(Mutex::new(GameStatus::NotStarted));
@@ -202,9 +213,7 @@ async fn game_over(highscore_api: &HighScoreApi, snake: &Snake) -> Result<(), Js
     Ok(())
 }
 
-fn add_canvas() -> Result<(), JsValue> {
-    let document = web_sys::window().unwrap().document().unwrap();
-
+fn add_canvas(document: &Document, parent: &HtmlElement) -> Result<(), JsValue> {
     let canvas = document
         .create_element("canvas")?
         .dyn_into::<HtmlCanvasElement>()?;
@@ -212,16 +221,12 @@ fn add_canvas() -> Result<(), JsValue> {
     canvas.set_width(snake::WIDTH);
     canvas.set_height(snake::HEIGHT);
 
-    match document
-        .query_selector("#phone .statusbar")?
-        .map(|el| el.dyn_into::<HtmlElement>().unwrap())
-    {
-        Some(status_bar) => status_bar.insert_adjacent_element("afterend", &canvas)?,
-        None => document
-            .body()
-            .unwrap()
-            .insert_adjacent_element("afterbegin", &canvas)?,
-    };
+    let insert_after: HtmlElement = parent
+        .query_selector(".statusbar")?
+        .map(|el| el.dyn_into().unwrap())
+        .ok_or_else(|| Error::new("No statusbar found to insert canvas under"))?;
+
+    insert_after.insert_adjacent_element("afterend", &canvas)?;
 
     Ok(())
 }
@@ -289,6 +294,18 @@ fn write_on_canvas(text: &str, row: u8) -> Result<(), JsValue> {
     context.set_font("30px monospace");
     context.set_fill_style(&"blue".into());
     context.fill_text(text, 10.0, row as f64 * snake::LINE_THICKNESS)?;
+    Ok(())
+}
+
+fn add_statusbar(document: &Document, parent: &HtmlElement) -> Result<(), JsValue> {
+    let statusbar = document.create_element("div")?.dyn_into::<HtmlElement>()?;
+    statusbar
+        .set_inner_html("<span id=\"apple-counter\"></span>\n<span id=\"game-status\"></span>\n");
+
+    parent.insert_adjacent_element("afterbegin", &statusbar)?;
+
+    update_status_in_statusbar(&GameStatus::NotStarted)?;
+
     Ok(())
 }
 
