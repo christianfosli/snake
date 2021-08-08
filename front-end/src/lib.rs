@@ -3,7 +3,7 @@ use gloo_timers::callback::Interval;
 use js_sys::Error;
 use std::{
     f64::consts::PI,
-    sync::{Arc, RwLock},
+    sync::{Arc, Mutex, RwLock},
 };
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -62,19 +62,18 @@ pub fn run() -> Result<(), JsValue> {
     let game_status_ptr_2 = Arc::clone(&game_status_ptr);
     let direction_ptr = Arc::new(RwLock::new(snake.direction));
     let direction_ptr_2 = Arc::clone(&direction_ptr);
-    let snake_ptr = Arc::new(RwLock::new(snake));
+    let snake_ptr = Arc::new(Mutex::new(snake));
     let snake_ptr_2 = Arc::clone(&snake_ptr);
 
     let keylistener = async move {
         let mut vi = Vi::new(&document, Arc::clone(&game_status_ptr));
 
         while let Some(cmd) = vi.next().await {
-            let snake = snake_ptr_2.read().unwrap();
+            let mut snake = snake_ptr_2.lock().unwrap();
 
             match cmd {
                 ViCommand::Start => {
                     let mut game_status = game_status_ptr.write().unwrap();
-                    let mut snake = snake_ptr_2.write().unwrap();
                     if *game_status == GameStatus::GameOver {
                         *snake = Snake::new();
                         *direction_ptr_2.write().unwrap() = snake.direction;
@@ -94,7 +93,6 @@ pub fn run() -> Result<(), JsValue> {
                         .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
                 }
                 ViCommand::Stop if *game_status_ptr.read().unwrap() == GameStatus::Playing => {
-                    let mut snake = snake_ptr_2.write().unwrap();
                     *snake = snake.kill();
                 }
                 ViCommand::Help => {
@@ -147,7 +145,7 @@ pub fn run() -> Result<(), JsValue> {
             return;
         }
 
-        let mut snake = snake_ptr.write().unwrap();
+        let mut snake = snake_ptr.lock().unwrap();
         snake.direction = *direction_ptr.read().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
         *snake = moved_snake;
