@@ -46,7 +46,7 @@ impl Vi {
                         Some(ViCommand::Move(Direction::Right))
                     }
                     " " if status != GameStatus::Playing => Some(ViCommand::Start),
-                    "q" => Some(ViCommand::Stop),
+                    "q" if status == GameStatus::Playing => Some(ViCommand::Stop),
                     "?" => Some(ViCommand::Help),
                     _ => None,
                 };

@@ -92,7 +92,7 @@ pub fn run() -> Result<(), JsValue> {
                     draw_apple(&document, &snake.target.expect("target was undefined"))
                         .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
                 }
-                ViCommand::Stop if *game_status_ptr.read().unwrap() == GameStatus::Playing => {
+                ViCommand::Stop => {
                     *snake = snake.kill();
                 }
                 ViCommand::Help => {
