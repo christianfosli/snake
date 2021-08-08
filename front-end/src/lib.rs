@@ -66,7 +66,6 @@ pub fn run() -> Result<(), JsValue> {
     let snake_ptr_2 = Arc::clone(&snake_ptr);
 
     let keylistener = async move {
-        let document = web_sys::window().unwrap().document().unwrap();
         let mut vi = Vi::new(&document);
 
         while let Some(cmd) = vi.next().await {
@@ -84,35 +83,35 @@ pub fn run() -> Result<(), JsValue> {
                         log::error!("Failed to update game status due to {:?}", e)
                     });
 
-                    clear_screen()
+                    clear_screen(&document)
                         .unwrap_or_else(|e| log::error!("Failed to clear screen due to {:?}", e));
 
-                    draw_snake(&snake)
+                    draw_snake(&document, &snake)
                         .unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
-                    draw_apple(&snake.target.expect("target was undefined"))
+                    draw_apple(&document, &snake.target.expect("target was undefined"))
                         .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
                 }
                 ViCommand::Stop if *game_status_ptr.lock().unwrap() == GameStatus::Playing => {
                     *snake = snake.kill();
                 }
                 ViCommand::Help => {
-                    clear_screen().unwrap();
-                    write_on_canvas("Navigate:", 2).unwrap_or_else(|e| {
+                    clear_screen(&document).unwrap();
+                    write_on_canvas(&document, "Navigate:", 2).unwrap_or_else(|e| {
                         log::error!("Failed to write on canvas due to {:?}", e)
                     });
-                    write_on_canvas("hjkl, ⬅⬇⬆️️➡️️, or", 3).unwrap_or_else(|e| {
+                    write_on_canvas(&document, "hjkl, ⬅⬇⬆️️➡️️, or", 3).unwrap_or_else(|e| {
                         log::error!("Failed to write on canvas due to {:?}", e)
                     });
-                    write_on_canvas("the numpad below", 4).unwrap_or_else(|e| {
+                    write_on_canvas(&document, "the numpad below", 4).unwrap_or_else(|e| {
                         log::error!("Failed to write on canvas due to {:?}", e)
                     });
-                    write_on_canvas("start with", 6).unwrap_or_else(|e| {
+                    write_on_canvas(&document, "start with", 6).unwrap_or_else(|e| {
                         log::error!("Failed to write on canvas due to {:?}", e)
                     });
-                    write_on_canvas("<space>", 7).unwrap_or_else(|e| {
+                    write_on_canvas(&document, "<space>", 7).unwrap_or_else(|e| {
                         log::error!("Failed to write on canvas due to {:?}", e)
                     });
-                    write_on_canvas("quit with <q>", 9).unwrap_or_else(|e| {
+                    write_on_canvas(&document, "quit with <q>", 9).unwrap_or_else(|e| {
                         log::error!("Failed to write on canvas due to {:?}", e)
                     });
                 }
@@ -128,11 +127,13 @@ pub fn run() -> Result<(), JsValue> {
 
     spawn_local(keylistener);
 
-    let apple_counter: HtmlElement = web_sys::window()
+    let document = web_sys::window()
         .ok_or_else(|| Error::new("Window was none"))?
         .document()
-        .ok_or_else(|| Error::new("Window had no document"))?
-        .query_selector("#apple-counter")?
+        .ok_or_else(|| Error::new("Window had no document"))?;
+
+    let apple_counter: HtmlElement = document
+        .get_element_by_id("apple-counter")
         .map(|x| x.dyn_into())
         .ok_or_else(|| Error::new("Document had no apple counter"))??;
 
@@ -154,10 +155,13 @@ pub fn run() -> Result<(), JsValue> {
                 ..*snake
             };
             *game_status = GameStatus::GameOver;
+
+            let document = document.clone();
+
             spawn_local(async move {
                 let highscore_api = HighScoreApi::new(highscore_base_url.into());
 
-                game_over(&highscore_api, &dead_snake)
+                game_over(&document, &highscore_api, &dead_snake)
                     .await
                     .unwrap_or_else(|err| {
                         log::error!("End-of-Game actions failed due to {:?}", err)
@@ -167,18 +171,18 @@ pub fn run() -> Result<(), JsValue> {
         }
 
         match old_tail {
-            Some(tail) => {
-                clear(&tail).unwrap_or_else(|e| log::error!("Failed to clear tail due to {:?}", e))
-            }
+            Some(tail) => clear(&document, &tail)
+                .unwrap_or_else(|e| log::error!("Failed to clear tail due to {:?}", e)),
             None if snake.target.is_some() => {
-                draw_apple(&snake.target.expect("target was undefined"))
+                draw_apple(&document, &snake.target.expect("target was undefined"))
                     .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e))
             }
-            None => write_on_canvas("💯 u crazy!! 💯", 8)
+            None => write_on_canvas(&document, "💯 u crazy!! 💯", 8)
                 // The snake now covers the whole screen!
                 .unwrap_or_else(|e| log::error!("Failed to write on canvas due to {:?}", e)),
         }
-        draw_snake(&snake).unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
+        draw_snake(&document, &snake)
+            .unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
         apple_counter.set_inner_text(&format!("🍎{}", snake.apple_count()));
     })
     .forget();
@@ -186,13 +190,18 @@ pub fn run() -> Result<(), JsValue> {
     Ok(())
 }
 
-async fn game_over(highscore_api: &HighScoreApi, snake: &Snake) -> Result<(), JsValue> {
+async fn game_over(
+    document: &Document,
+    highscore_api: &HighScoreApi,
+    snake: &Snake,
+) -> Result<(), JsValue> {
     let apple_count = snake.apple_count();
     log::debug!("Game over with {} apples eaten", apple_count);
 
     update_status_in_statusbar(&GameStatus::GameOver)?;
 
     write_on_canvas(
+        document,
         &format!(
             "score: {} {}",
             apple_count,
@@ -231,8 +240,7 @@ fn add_canvas(document: &Document, parent: &HtmlElement) -> Result<(), JsValue> 
     Ok(())
 }
 
-fn get_canvas_context() -> Result<CanvasRenderingContext2d, JsValue> {
-    let document = web_sys::window().unwrap().document().unwrap();
+fn get_canvas_context(document: &Document) -> Result<CanvasRenderingContext2d, JsValue> {
     let canvas = document
         .get_element_by_id("canvas")
         .expect("no canvas element could be found")
@@ -246,8 +254,8 @@ fn get_canvas_context() -> Result<CanvasRenderingContext2d, JsValue> {
     Ok(context)
 }
 
-fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
-    let context = get_canvas_context()?;
+fn draw_snake(document: &Document, snake: &Snake) -> Result<(), JsValue> {
+    let context = get_canvas_context(document)?;
     context.set_fill_style(&JsValue::from_str("#abba00"));
     context.fill_rect(
         snake.head().x,
@@ -263,8 +271,8 @@ fn draw_snake(snake: &Snake) -> Result<(), JsValue> {
     Ok(())
 }
 
-fn draw_apple(apple: &Position) -> Result<(), JsValue> {
-    let context = get_canvas_context()?;
+fn draw_apple(document: &Document, apple: &Position) -> Result<(), JsValue> {
+    let context = get_canvas_context(document)?;
     let radius = (snake::LINE_THICKNESS / 2.0).floor();
     let x = (apple.x + snake::LINE_THICKNESS / 2.0).round();
     let y = (apple.y + snake::LINE_THICKNESS / 2.0).round();
@@ -277,20 +285,20 @@ fn draw_apple(apple: &Position) -> Result<(), JsValue> {
     Ok(())
 }
 
-fn clear(rect: &Position) -> Result<(), JsValue> {
-    let context = get_canvas_context()?;
+fn clear(document: &Document, rect: &Position) -> Result<(), JsValue> {
+    let context = get_canvas_context(document)?;
     context.clear_rect(rect.x, rect.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
     Ok(())
 }
 
-fn clear_screen() -> Result<(), JsValue> {
-    let context = get_canvas_context()?;
+fn clear_screen(document: &Document) -> Result<(), JsValue> {
+    let context = get_canvas_context(document)?;
     context.clear_rect(0.0, 0.0, snake::WIDTH as f64, snake::HEIGHT as f64);
     Ok(())
 }
 
-fn write_on_canvas(text: &str, row: u8) -> Result<(), JsValue> {
-    let context = get_canvas_context()?;
+fn write_on_canvas(document: &Document, text: &str, row: u8) -> Result<(), JsValue> {
+    let context = get_canvas_context(document)?;
     context.set_font("30px monospace");
     context.set_fill_style(&"blue".into());
     context.fill_text(text, 10.0, row as f64 * snake::LINE_THICKNESS)?;
