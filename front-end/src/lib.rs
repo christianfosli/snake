@@ -49,13 +49,13 @@ pub fn run() -> Result<(), JsValue> {
         .document()
         .ok_or_else(|| Error::new("Window had no document"))?;
 
-    let container: HtmlElement = document
-        .query_selector("main #phone")?
-        .ok_or_else(|| document.query_selector("body").unwrap())
+    let html_container: HtmlElement = document
+        .get_element_by_id("phone")
+        .ok_or_else(|| Error::new("Could not find a phone element to mount snake into"))
         .map(|el| el.dyn_into())??;
 
-    add_statusbar(&document, &container)?;
-    add_canvas(&document, &container)?;
+    add_statusbar(&document, &html_container)?;
+    add_canvas(&document, &html_container)?;
 
     let snake = Snake::new();
     let game_status_ptr = Arc::new(Mutex::new(GameStatus::NotStarted));
@@ -299,8 +299,13 @@ fn write_on_canvas(text: &str, row: u8) -> Result<(), JsValue> {
 
 fn add_statusbar(document: &Document, parent: &HtmlElement) -> Result<(), JsValue> {
     let statusbar = document.create_element("div")?.dyn_into::<HtmlElement>()?;
-    statusbar
-        .set_inner_html("<span id=\"apple-counter\"></span>\n<span id=\"game-status\"></span>\n");
+
+    statusbar.set_class_name("statusbar");
+
+    statusbar.set_inner_html(
+        "<span id=\"apple-counter\">🍎0</span>\n\
+         <span id=\"game-status\"></span>\n",
+    );
 
     parent.insert_adjacent_element("afterbegin", &statusbar)?;
 
