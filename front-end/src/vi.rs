@@ -37,6 +37,7 @@ impl Vi {
             };
 
             if let Some(dir) = dir {
+                event.prevent_default();
                 sender.unbounded_send(dir).unwrap()
             };
         });
