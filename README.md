@@ -9,16 +9,19 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 
 ## Architecture 🏗
 
-* [Front-end application](https://www.playsnake.no) where snake is implemented with rust/webassembly.
-
-  * Deployed as a Azure Static WebApp. When running locally with docker nginx is used.
-
-* [API for working with highscores](https://highscores.playsnake.no), implemented as Azure functions.
-
-* MongoDB database for persistence.
-
-* Azure KeyVault for safely providing function app with MongoDB connection string
-  (but when running locally we just use environment variables instead).
+```
+|--------------------------------|      |-------------------------|      |---------|
+| Front-end                      |      | Highscore API           |      | Database| 
+|                                | <--> |                         | <--> |         |
+| Snake implemented in rust(wasm)|      | Azure Functions with F# |      | MongoDB |
+| Deployed as Azure static webapp|      |                         | <-|  |---------|
+|--------------------------------|      |-------------------------|   V             
+                                                                    |---------------|
+  https://www.playsnake.no          https://highscores.playsnake.no | Secrets store |
+                                                                    |               |
+                                                                    | Azure KeyVault|
+                                                                    |---------------|
+```
 
 All the cloud infra is Infrastructure-as-Code managed by Terraform.
 
