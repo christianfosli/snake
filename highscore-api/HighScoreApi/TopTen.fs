@@ -4,7 +4,9 @@ open System
 open System.Net
 open Microsoft.Azure.Functions.Worker
 open Microsoft.Azure.Functions.Worker.Http
+open Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes
 open Microsoft.Extensions.Logging
+open Microsoft.OpenApi.Models
 open MongoDB.Driver
 
 open HighScoreApi.Common
@@ -57,9 +59,17 @@ module TopTen =
         else
             Ok None
 
-
+    [<OpenApiOperation("topten", [| "highscores" |], Summary = "Get top-ten highscores")>]
+    [<OpenApiParameter("since", Description = "Optional since date", In = ParameterLocation.Query)>]
+    [<OpenApiResponseWithBody(HttpStatusCode.OK,
+                              "application/json",
+                              typeof<HighScoreDto list>,
+                              Description = "Returns a list of highscores")>]
     [<Function("TopTen")>]
-    let run ([<HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)>] req: HttpRequestData) (ctx: FunctionContext) =
+    let run
+        ([<HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)>] req: HttpRequestData)
+        (ctx: FunctionContext)
+        =
         let log = ctx.GetLogger()
 
         async {

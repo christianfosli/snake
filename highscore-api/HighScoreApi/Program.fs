@@ -1,6 +1,7 @@
 namespace HighScoreApi
 
 open System.Text.Json
+open Microsoft.Azure.Functions.Worker.Extensions.OpenApi.Extensions
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
@@ -18,6 +19,7 @@ module App =
                             options.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase)
                     |> ignore)
                 .ConfigureAppConfiguration(fun builder -> builder.AddEnvironmentVariables() |> ignore)
+                .ConfigureOpenApi()
 
         let host = builder.Build()
 

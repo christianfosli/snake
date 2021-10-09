@@ -11,8 +11,9 @@
   <ItemGroup>
     <PackageReference Include="FSharp.Data.LiteralProviders" Version="0.3.*" />
     <PackageReference Include="FSharp.SystemTextJson" Version="0.17.*" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.OpenApi" Version="0.9.0-preview" />
     <PackageReference Include="Microsoft.Extensions.Primitives" Version="5.0.1" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.3.*" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="1.5.*" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.0.*" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Http" Version="3.0.*" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.1.*" />
