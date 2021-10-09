@@ -19,8 +19,8 @@ services:
         CRON_CLEANUP_SCHEDULE: '0 * * * * *'
     environment:
       CONNECTION_STRING: mongodb://root:secret@db
-    expose:
-      - '80'
+    ports:
+      - '8081:80'
     depends_on:
       - db
   db:

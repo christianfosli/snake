@@ -6,6 +6,7 @@ open System.Text.Json
 open System.Text.Json.Serialization
 open Microsoft.Azure.Functions.Worker
 open Microsoft.Azure.Functions.Worker.Http
+open Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes
 open Microsoft.Extensions.Logging
 open MongoDB.Driver
 
@@ -51,6 +52,24 @@ module Submit =
             | err -> return PersistResult.Err err.Message
         }
 
+    [<OpenApiOperation("submit", [| "highscores" |], Summary = "Submit new highscore")>]
+    [<OpenApiRequestBody("application/json", typeof<HighScoreDto>)>]
+    [<OpenApiResponseWithBody(HttpStatusCode.Created,
+                              "text/plain",
+                              typeof<string>,
+                              Description = "OK - New highscore created")>]
+    [<OpenApiResponseWithBody(HttpStatusCode.OK,
+                              "text/plain",
+                              typeof<string>,
+                              Description = "OK - Highscore has been submitted already")>]
+    [<OpenApiResponseWithBody(HttpStatusCode.BadRequest,
+                              "text/plain",
+                              typeof<string>,
+                              Description = "If highscore fails deserialization")>]
+    [<OpenApiResponseWithBody(HttpStatusCode.UnprocessableEntity,
+                              "text/plain",
+                              typeof<string>,
+                              Description = "If highscore fails validation")>]
     [<Function("Submit")>]
     let run
         ([<HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = null)>] req: HttpRequestData)
