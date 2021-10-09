@@ -26,15 +26,14 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 All the cloud infra is Infrastructure-as-Code managed by Terraform.
 
 The highscores API is documented with OpenApi. [Swagger UI](https://highscores.playsnake.no/api/swagger/ui) |
-[json](https://highscores.playsnake.no/api/openapi/v3.json) | [yaml](https://highscores.playsnake.no/api/openapi/v3.json).
+[json](https://highscores.playsnake.no/api/openapi/v3.json) | [yaml](https://highscores.playsnake.no/api/openapi/v3.yaml).
 
 ## Development 🐳
 
 Run all services with docker compose:
 
 ```console
-# Enable BuildKit if you haven't.
-# This is one several ways to do so.
+# Enable BuildKit if you haven't. Tick the box in Docker Desktop settings, or set some variables:
 export DOCKER_BUILDKIT=1
 export COMPOSE_DOCKER_CLI_BUILD=1
 
@@ -45,7 +44,8 @@ docker compose up -d --build
 docker-compose up -d --build
 ```
 
-Then open front-end at [localhost:8080](http://localhost:8080)
+Then open front-end at [localhost:8080](http://localhost:8080).
+The back-end is available at [localhost:8081](http://localhost:8081/api/swagger/ui).
 
 To stop all services and remove their containers:
 
