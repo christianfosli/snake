@@ -25,7 +25,7 @@ impl Vi {
     pub fn new(target: &EventTarget, status: Arc<RwLock<GameStatus>>) -> Self {
         let (sender, receiver) = mpsc::unbounded();
         let listener = EventListener::new_with_options(
-            &target,
+            target,
             "keydown",
             EventListenerOptions::enable_prevent_default(),
             move |event| {

@@ -1,4 +1,4 @@
-FROM rust:1.53 AS builder
+FROM rust:1.55 AS builder
 # Pass a unique VERSION as build arg to bust browser cache
 ARG VERSION=latest 
 ARG BUILD_PROFILE=release
