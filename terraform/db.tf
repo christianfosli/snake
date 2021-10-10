@@ -13,7 +13,8 @@ resource "mongodbatlas_cluster" "db" {
   project_id                  = mongodbatlas_project.project.id
   name                        = "${var.ENVIRONMENT}-azure-${var.MONGO_TIER}-snake"
   cluster_type                = "SHARED"
-  provider_name               = "AZURE"
+  provider_name               = "TENANT"
+  backing_provider_name       = "AZURE"
   provider_region_name        = "EUROPE_WEST"
   provider_instance_size_name = var.MONGO_TIER
 }
