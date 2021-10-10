@@ -336,7 +336,7 @@ fn update_status_in_statusbar(document: &Document, status: &GameStatus) -> Resul
         GameStatus::Playing => "Playing 🐍",
     };
 
-    game_status_element.set_inner_text(&status_text);
+    game_status_element.set_inner_text(status_text);
 
     Ok(())
 }

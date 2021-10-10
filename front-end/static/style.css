@@ -37,6 +37,10 @@ footer p {
   display: none;
 }
 
+.text-muted {
+  opacity: 0.5;
+}
+
 /* Phone and Canvas */
 
 #phone {
