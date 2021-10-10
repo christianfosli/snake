@@ -11,6 +11,7 @@ terraform {
       version = "~>2.69"
     }
     mongodbatlas = {
+      source  = "mongodb/mongodbatlas"
       version = "~>1.0"
     }
   }
