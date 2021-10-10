@@ -14,6 +14,16 @@ variable "ENVIRONMENT" {
   default = "staging"
 }
 
+variable "MONGO_ORG_ID" {
+  type    = string
+  default = "5f15e102ebca9f3ede3df37c"
+}
+
+variable "MONGO_TIER" {
+  type    = string
+  default = "M0"
+}
+
 locals {
   common_tags = {
     Owner       = "Christian Fosli"

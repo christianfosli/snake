@@ -10,9 +10,14 @@ terraform {
     azurerm = {
       version = "~>2.69"
     }
+    mongodbatlas = {
+      version = "~>1.0"
+    }
   }
 }
 
 provider "azurerm" {
   features {}
 }
+
+provider "mongodbatlas" {}
