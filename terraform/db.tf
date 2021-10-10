@@ -6,8 +6,7 @@ resource "mongodbatlas_project" "project" {
 # TODO / Manual Step:
 # As of now (October, 2021) one cannot programatically give the Mongo API key
 # used to provisions these resources the "Project Owner" role on the above project.
-# So this must be done manually in cloud.mongodb.com access manager before creation
-# of the below resources will succeed
+# The fix is to use cloud.mongodb.com access manager to invite the API key user to the project
 
 resource "mongodbatlas_cluster" "db" {
   project_id                  = mongodbatlas_project.project.id
