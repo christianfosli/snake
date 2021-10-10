@@ -26,7 +26,7 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 All the cloud infra is Infrastructure-as-Code managed by Terraform.
 
 The highscores API is documented with OpenApi. [Swagger UI](https://highscores.playsnake.no/api/swagger/ui) |
-[json](https://highscores.playsnake.no/api/openapi/v3.json) | [yaml](https://highscores.playsnake.no/api/openapi/v3.yaml).
+[json](https://highscores.playsnake.no/api/swagger.json) | [yaml](https://highscores.playsnake.no/api/swagger.yaml).
 
 ## Development 🐳
 
