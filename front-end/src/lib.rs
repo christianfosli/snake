@@ -3,7 +3,7 @@ use gloo_timers::callback::Interval;
 use js_sys::Error;
 use std::{
     f64::consts::PI,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, RwLock},
 };
 use wasm_bindgen::prelude::*;
 use wasm_bindgen::JsCast;
@@ -57,26 +57,28 @@ pub fn run() -> Result<(), JsValue> {
     add_statusbar(&document, &html_container)?;
     add_canvas(&document, &html_container)?;
 
-    let snake = Snake::new();
-    let game_status_ptr = Arc::new(RwLock::new(GameStatus::NotStarted));
-    let game_status_ptr_2 = Arc::clone(&game_status_ptr);
-    let direction_ptr = Arc::new(RwLock::new(snake.direction));
-    let direction_ptr_2 = Arc::clone(&direction_ptr);
-    let snake_ptr = Arc::new(Mutex::new(snake));
-    let snake_ptr_2 = Arc::clone(&snake_ptr);
+    let (status_ptr, status_ptr_2, dir_ptr, dir_ptr_2, snake_ptr, snake_ptr_2) = {
+        let snake = Snake::new();
+        let status = Arc::new(RwLock::new(GameStatus::NotStarted));
+        let status_2 = Arc::clone(&status);
+        let dir = Arc::new(RwLock::new(snake.direction));
+        let dir_2 = Arc::clone(&dir);
+        let snake = Arc::new(RwLock::new(snake));
+        let snake_2 = Arc::clone(&snake);
+        (status, status_2, dir, dir_2, snake, snake_2)
+    };
 
     let keylistener = async move {
-        let mut vi = Vi::new(&document, Arc::clone(&game_status_ptr));
+        let mut vi = Vi::new(&document, Arc::clone(&status_ptr_2));
 
         while let Some(cmd) = vi.next().await {
-            let mut snake = snake_ptr_2.lock().unwrap();
-
             match cmd {
                 ViCommand::Start => {
-                    let mut game_status = game_status_ptr.write().unwrap();
+                    let mut snake = snake_ptr_2.write().unwrap();
+                    let mut game_status = status_ptr_2.write().unwrap();
                     if *game_status == GameStatus::GameOver {
                         *snake = Snake::new();
-                        *direction_ptr_2.write().unwrap() = snake.direction;
+                        *dir_ptr_2.write().unwrap() = snake.direction;
                     }
 
                     *game_status = GameStatus::Playing;
@@ -93,6 +95,7 @@ pub fn run() -> Result<(), JsValue> {
                         .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
                 }
                 ViCommand::Stop => {
+                    let mut snake = snake_ptr_2.write().unwrap();
                     *snake = snake.kill();
                 }
                 ViCommand::Help => {
@@ -117,9 +120,10 @@ pub fn run() -> Result<(), JsValue> {
                     });
                 }
                 ViCommand::Move(dir)
-                    if snake.apple_count() == 0 || dir != snake.direction.turn_180_degrees() =>
+                    if snake_ptr_2.read().unwrap().apple_count() == 0
+                        || dir != snake_ptr_2.read().unwrap().direction.turn_180_degrees() =>
                 {
-                    *direction_ptr_2.write().unwrap() = dir;
+                    *dir_ptr_2.write().unwrap() = dir;
                 }
                 fallback => {
                     log::debug!("Ignored command {:?}", fallback);
@@ -141,12 +145,12 @@ pub fn run() -> Result<(), JsValue> {
         .ok_or_else(|| Error::new("Document had no apple counter"))??;
 
     Interval::new(300, move || {
-        if *game_status_ptr_2.read().unwrap() != GameStatus::Playing {
+        if *status_ptr.read().unwrap() != GameStatus::Playing {
             return;
         }
 
-        let mut snake = snake_ptr.lock().unwrap();
-        snake.direction = *direction_ptr.read().unwrap();
+        let mut snake = snake_ptr.write().unwrap();
+        snake.direction = *dir_ptr.read().unwrap();
         let (moved_snake, old_tail) = snake.move_along();
         *snake = moved_snake;
 
@@ -156,7 +160,7 @@ pub fn run() -> Result<(), JsValue> {
                 body: snake.body.clone(),
                 ..*snake
             };
-            *game_status_ptr_2.write().unwrap() = GameStatus::GameOver;
+            *status_ptr.write().unwrap() = GameStatus::GameOver;
 
             let document = document.clone();
 

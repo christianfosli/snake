@@ -10,6 +10,7 @@ edition = "2021"
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 wasm-bindgen-futures = "0.4"
 js-sys = "0.3"
 log = "0.4"
@@ -17,21 +18,12 @@ wasm-logger = "0.2"
 gloo-timers = "0.2"
 gloo-events = "0.1"
 futures = "0.3"
+serde = { version = "1.0", features = ["derive"] }
 serde_derive = "1.0"
 serde_json = "1.0"
 serde_qs = "0.8"
-
-[dependencies.serde]
-version = "1.0"
-features = [
-  "derive",
-]
-
-[dependencies.wasm-bindgen]
-version = "0.2"
-features = [
-  "serde-serialize",
-]
+rand = "0.8"
+getrandom = { version = "0.2", features = ["js"] }
 
 [dependencies.web-sys]
 version = "0.3"
@@ -50,12 +42,6 @@ features = [
   "RequestMode",
   "Response",
   "Window",
-]
-
-[dependencies.rand]
-version = "0.7"
-features = [
-  "wasm-bindgen",
 ]
 
 [dependencies.chrono]
