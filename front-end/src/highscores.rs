@@ -22,7 +22,7 @@ impl HighScore {
     }
 }
 
-pub async fn fetch_and_set_highscores(client: &HighScoreApi) -> Result<(), JsValue> {
+pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
     let dom = web_sys::window()
         .ok_or_else(|| Error::new("Window was none"))?
         .document()
@@ -38,7 +38,7 @@ pub async fn fetch_and_set_highscores(client: &HighScoreApi) -> Result<(), JsVal
 
     let topten_alltime_html = topten_alltime_fut
         .await
-        .map(|hs| hs.iter().map(|hs| hs.to_table_row()).collect::<String>())
+        .map(|hs| hs.iter().map(HighScore::to_table_row).collect::<String>())
         .unwrap_or_else(|err| {
             log::error!("Error fetching top ten alltime: {:?}", err);
             String::from("<tr><td colspan=\"2\">Failed to fetch top ten alltime 😩</td></tr>")
@@ -46,12 +46,12 @@ pub async fn fetch_and_set_highscores(client: &HighScoreApi) -> Result<(), JsVal
 
     dom.query_selector("#topten-alltime tbody")?
         .ok_or_else(|| Error::new("Cant find topten alltime table"))
-        .map(|table| table.dyn_into::<HtmlElement>())?
+        .map(JsCast::dyn_into::<HtmlElement>)?
         .map(|table| table.set_inner_html(&topten_alltime_html))?;
 
     let topten_yearly_html = topten_yearly_fut
         .await
-        .map(|hs| hs.iter().map(|hs| hs.to_table_row()).collect::<String>())
+        .map(|hs| hs.iter().map(HighScore::to_table_row).collect::<String>())
         .unwrap_or_else(|err| {
             log::error!("Error fetching top ten yearly: {:?}", err);
             String::from("<tr><td colspan=\"2\">Failed to fetch top ten this year 😩</td></tr>")
@@ -59,16 +59,13 @@ pub async fn fetch_and_set_highscores(client: &HighScoreApi) -> Result<(), JsVal
 
     dom.query_selector("#topten-yearly tbody")?
         .ok_or_else(|| Error::new("Cant find topten yearly table"))
-        .map(|table| table.dyn_into::<HtmlElement>())?
+        .map(JsCast::dyn_into::<HtmlElement>)?
         .map(|table| table.set_inner_html(&topten_yearly_html))?;
 
     Ok(())
 }
 
-pub async fn check_and_submit_highscore(
-    client: &HighScoreApi,
-    score: usize,
-) -> Result<(), JsValue> {
+pub async fn check_and_submit(client: &HighScoreApi, score: usize) -> Result<(), JsValue> {
     let start_of_year = Utc
         .ymd(Date::new_0().get_utc_full_year() as i32, 1, 1)
         .and_hms(0, 0, 0);

@@ -114,7 +114,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn turn_180_degrees(&self) -> Direction {
+    pub fn turn_180_degrees(self) -> Direction {
         match self {
             Direction::Up => Direction::Down,
             Direction::Right => Direction::Left,
@@ -132,8 +132,8 @@ pub struct Position {
 
 impl Position {
     fn random() -> Position {
-        let mut x = (rand::random::<f64>() * WIDTH as f64).floor();
-        let mut y = (rand::random::<f64>() * HEIGHT as f64).floor();
+        let mut x = (rand::random::<f64>() * f64::from(WIDTH)).floor();
+        let mut y = (rand::random::<f64>() * f64::from(HEIGHT)).floor();
         // we substract val % LINE_THICKNESS so the snake can get here
         x -= x % LINE_THICKNESS;
         y -= y % LINE_THICKNESS;
