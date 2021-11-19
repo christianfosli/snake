@@ -11,13 +11,12 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::{CanvasRenderingContext2d, Document, HtmlCanvasElement, HtmlElement};
 
 mod snake;
-use crate::snake::*;
+use crate::snake::{Direction, Position, Snake};
 
 mod vi;
-use crate::vi::*;
+use crate::vi::{Command, Vi};
 
 mod highscores;
-use crate::highscores::*;
 
 mod services;
 use crate::services::highscore_api::HighScoreApi;
@@ -39,9 +38,9 @@ pub fn run() -> Result<(), JsValue> {
 
     spawn_local(async move {
         let highscore_api = HighScoreApi::new(highscore_base_url.to_owned());
-        fetch_and_set_highscores(&highscore_api)
+        highscores::fetch_and_set(&highscore_api)
             .await
-            .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err))
+            .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err));
     });
 
     let document = web_sys::window()
@@ -52,7 +51,7 @@ pub fn run() -> Result<(), JsValue> {
     let html_container: HtmlElement = document
         .get_element_by_id("phone")
         .ok_or_else(|| Error::new("Could not find a phone element to mount snake into"))
-        .map(|el| el.dyn_into())??;
+        .map(JsCast::dyn_into)??;
 
     add_statusbar(&document, &html_container)?;
     add_canvas(&document, &html_container)?;
@@ -73,7 +72,7 @@ pub fn run() -> Result<(), JsValue> {
 
         while let Some(cmd) = vi.next().await {
             match cmd {
-                ViCommand::Start => {
+                Command::Start => {
                     let mut snake = snake_ptr_2.write().unwrap();
                     let mut game_status = status_ptr_2.write().unwrap();
                     if *game_status == GameStatus::GameOver {
@@ -82,8 +81,8 @@ pub fn run() -> Result<(), JsValue> {
                     }
 
                     *game_status = GameStatus::Playing;
-                    update_status_in_statusbar(&document, &game_status).unwrap_or_else(|e| {
-                        log::error!("Failed to update game status due to {:?}", e)
+                    update_status_in_statusbar(&document, *game_status).unwrap_or_else(|e| {
+                        log::error!("Failed to update game status due to {:?}", e);
                     });
 
                     clear_screen(&document)
@@ -94,32 +93,32 @@ pub fn run() -> Result<(), JsValue> {
                     draw_apple(&document, &snake.target.expect("target was undefined"))
                         .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
                 }
-                ViCommand::Stop => {
+                Command::Stop => {
                     let mut snake = snake_ptr_2.write().unwrap();
                     *snake = snake.kill();
                 }
-                ViCommand::Help => {
+                Command::Help => {
                     clear_screen(&document).unwrap();
                     write_on_canvas(&document, "Navigate:", 2).unwrap_or_else(|e| {
-                        log::error!("Failed to write on canvas due to {:?}", e)
+                        log::error!("Failed to write on canvas due to {:?}", e);
                     });
                     write_on_canvas(&document, "hjkl, ⬅⬇⬆️️➡️️, or", 3).unwrap_or_else(|e| {
-                        log::error!("Failed to write on canvas due to {:?}", e)
+                        log::error!("Failed to write on canvas due to {:?}", e);
                     });
                     write_on_canvas(&document, "the numpad below", 4).unwrap_or_else(|e| {
-                        log::error!("Failed to write on canvas due to {:?}", e)
+                        log::error!("Failed to write on canvas due to {:?}", e);
                     });
                     write_on_canvas(&document, "start with", 6).unwrap_or_else(|e| {
-                        log::error!("Failed to write on canvas due to {:?}", e)
+                        log::error!("Failed to write on canvas due to {:?}", e);
                     });
                     write_on_canvas(&document, "<space>", 7).unwrap_or_else(|e| {
-                        log::error!("Failed to write on canvas due to {:?}", e)
+                        log::error!("Failed to write on canvas due to {:?}", e);
                     });
                     write_on_canvas(&document, "quit with <q>", 9).unwrap_or_else(|e| {
-                        log::error!("Failed to write on canvas due to {:?}", e)
+                        log::error!("Failed to write on canvas due to {:?}", e);
                     });
                 }
-                ViCommand::Move(dir)
+                Command::Move(dir)
                     if snake_ptr_2.read().unwrap().apple_count() == 0
                         || dir != snake_ptr_2.read().unwrap().direction.turn_180_degrees() =>
                 {
@@ -141,7 +140,7 @@ pub fn run() -> Result<(), JsValue> {
 
     let apple_counter: HtmlElement = document
         .get_element_by_id("apple-counter")
-        .map(|x| x.dyn_into())
+        .map(JsCast::dyn_into)
         .ok_or_else(|| Error::new("Document had no apple counter"))??;
 
     Interval::new(300, move || {
@@ -170,7 +169,7 @@ pub fn run() -> Result<(), JsValue> {
                 game_over(&document, &highscore_api, &dead_snake)
                     .await
                     .unwrap_or_else(|err| {
-                        log::error!("End-of-Game actions failed due to {:?}", err)
+                        log::error!("End-of-Game actions failed due to {:?}", err);
                     });
             });
             return;
@@ -181,7 +180,7 @@ pub fn run() -> Result<(), JsValue> {
                 .unwrap_or_else(|e| log::error!("Failed to clear tail due to {:?}", e)),
             None if snake.target.is_some() => {
                 draw_apple(&document, &snake.target.expect("target was undefined"))
-                    .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e))
+                    .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
             }
             None => write_on_canvas(&document, "💯 u crazy!! 💯", 8)
                 // The snake now covers the whole screen!
@@ -204,7 +203,7 @@ async fn game_over(
     let apple_count = snake.apple_count();
     log::debug!("Game over with {} apples eaten", apple_count);
 
-    update_status_in_statusbar(document, &GameStatus::GameOver)?;
+    update_status_in_statusbar(document, GameStatus::GameOver)?;
 
     write_on_canvas(
         document,
@@ -220,10 +219,10 @@ async fn game_over(
     )?;
 
     log::debug!("Checking if score is a highscore");
-    check_and_submit_highscore(highscore_api, apple_count).await?;
+    highscores::check_and_submit(highscore_api, apple_count).await?;
 
     log::debug!("Refreshing highscore tables");
-    fetch_and_set_highscores(highscore_api).await?;
+    highscores::fetch_and_set(highscore_api).await?;
 
     Ok(())
 }
@@ -299,7 +298,7 @@ fn clear(document: &Document, rect: &Position) -> Result<(), JsValue> {
 
 fn clear_screen(document: &Document) -> Result<(), JsValue> {
     let context = get_canvas_context(document)?;
-    context.clear_rect(0.0, 0.0, snake::WIDTH as f64, snake::HEIGHT as f64);
+    context.clear_rect(0.0, 0.0, f64::from(snake::WIDTH), f64::from(snake::HEIGHT));
     Ok(())
 }
 
@@ -307,7 +306,7 @@ fn write_on_canvas(document: &Document, text: &str, row: u8) -> Result<(), JsVal
     let context = get_canvas_context(document)?;
     context.set_font("30px monospace");
     context.set_fill_style(&"blue".into());
-    context.fill_text(text, 10.0, row as f64 * snake::LINE_THICKNESS)?;
+    context.fill_text(text, 10.0, f64::from(row) * snake::LINE_THICKNESS)?;
     Ok(())
 }
 
@@ -323,18 +322,18 @@ fn add_statusbar(document: &Document, parent: &HtmlElement) -> Result<(), JsValu
 
     parent.insert_adjacent_element("afterbegin", &statusbar)?;
 
-    update_status_in_statusbar(document, &GameStatus::NotStarted)?;
+    update_status_in_statusbar(document, GameStatus::NotStarted)?;
 
     Ok(())
 }
 
-fn update_status_in_statusbar(document: &Document, status: &GameStatus) -> Result<(), JsValue> {
+fn update_status_in_statusbar(document: &Document, status: GameStatus) -> Result<(), JsValue> {
     let game_status_element: HtmlElement = document
         .query_selector("#game-status")?
-        .map(|x| x.dyn_into())
+        .map(JsCast::dyn_into)
         .ok_or_else(|| Error::new("Document had no game status element"))??;
 
-    let status_text = match *status {
+    let status_text = match status {
         GameStatus::NotStarted => "Press <space> to start",
         GameStatus::GameOver => "Restart with <space>",
         GameStatus::Playing => "Playing 🐍",

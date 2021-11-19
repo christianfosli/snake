@@ -9,12 +9,12 @@ use wasm_bindgen::JsCast;
 use web_sys::{EventTarget, KeyboardEvent};
 
 pub struct Vi {
-    pub receiver: mpsc::UnboundedReceiver<ViCommand>,
+    pub receiver: mpsc::UnboundedReceiver<Command>,
     pub listener: EventListener,
 }
 
 #[derive(Debug)]
-pub enum ViCommand {
+pub enum Command {
     Start,
     Stop,
     Help,
@@ -32,28 +32,28 @@ impl Vi {
                 let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
                 let key: &str = &event.key();
                 let status = *status.read().unwrap();
-                let dir: Option<ViCommand> = match key {
+                let dir: Option<Command> = match key {
                     "h" | "ArrowLeft" if status == GameStatus::Playing => {
-                        Some(ViCommand::Move(Direction::Left))
+                        Some(Command::Move(Direction::Left))
                     }
                     "j" | "ArrowDown" if status == GameStatus::Playing => {
-                        Some(ViCommand::Move(Direction::Down))
+                        Some(Command::Move(Direction::Down))
                     }
                     "k" | "ArrowUp" if status == GameStatus::Playing => {
-                        Some(ViCommand::Move(Direction::Up))
+                        Some(Command::Move(Direction::Up))
                     }
                     "l" | "ArrowRight" if status == GameStatus::Playing => {
-                        Some(ViCommand::Move(Direction::Right))
+                        Some(Command::Move(Direction::Right))
                     }
-                    " " if status != GameStatus::Playing => Some(ViCommand::Start),
-                    "q" if status == GameStatus::Playing => Some(ViCommand::Stop),
-                    "?" => Some(ViCommand::Help),
+                    " " if status != GameStatus::Playing => Some(Command::Start),
+                    "q" if status == GameStatus::Playing => Some(Command::Stop),
+                    "?" => Some(Command::Help),
                     _ => None,
                 };
 
                 if let Some(dir) = dir {
                     event.prevent_default();
-                    sender.unbounded_send(dir).unwrap()
+                    sender.unbounded_send(dir).unwrap();
                 };
             },
         );
@@ -63,7 +63,7 @@ impl Vi {
 }
 
 impl Stream for Vi {
-    type Item = ViCommand;
+    type Item = Command;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
         Pin::new(&mut self.receiver).poll_next(cx)

@@ -26,14 +26,13 @@ impl HighScoreApi {
         let mut options = RequestInit::new();
         options.method("GET").mode(RequestMode::Cors);
 
-        let request_url = match since {
-            Some(since) => {
-                let query_params = serde_qs::to_string(&QueryParams { since })
-                    .map_err(|e| Error::new(&format!("Serialize error: {:?}", e)))?;
+        let request_url = if let Some(since) = since {
+            let query_params = serde_qs::to_string(&QueryParams { since })
+                .map_err(|e| Error::new(&format!("Serialize error: {:?}", e)))?;
 
-                format!("{}/api/topten?{}", self.base_url, query_params)
-            }
-            None => format!("{}/api/topten", self.base_url),
+            format!("{}/api/topten?{}", self.base_url, query_params)
+        } else {
+            format!("{}/api/topten", self.base_url)
         };
 
         let request = Request::new_with_str_and_init(&request_url, &options)?;
