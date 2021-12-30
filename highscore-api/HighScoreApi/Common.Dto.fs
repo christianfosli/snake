@@ -40,7 +40,7 @@ module Dto =
               Score =
                   match Score.create document.Score with
                   | Ok s -> s
-                  | Error e -> failwithf "Bad data! Can't convert document %A due to: %A" document.Id e
+                  | Error e -> failwithf $"Bad data! Can't convert document %A{document.Id} due to: %A{e}"
               TimeStamp = document.TimeStamp }
 
         let fromHighScore (highscore: HighScore) : HighScoreDocument =

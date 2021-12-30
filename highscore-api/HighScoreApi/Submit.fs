@@ -32,19 +32,15 @@ module Submit =
         | Err of string
 
     let persist (collection: IMongoCollection<HighScoreDocument>) highscore =
-        async {
+        task {
             try
                 let! existingScore =
                     collection
                         .Find(fun s -> s.Id = highscore.Id)
                         .FirstOrDefaultAsync()
-                    |> Async.AwaitTask
 
                 if box existingScore = null then
-                    do!
-                        collection.InsertOneAsync(highscore)
-                        |> Async.AwaitTask
-
+                    do! collection.InsertOneAsync(highscore)
                     return PersistResult.Created
                 else
                     return PersistResult.AlreadyExists
@@ -77,17 +73,15 @@ module Submit =
         =
         let log = ctx.GetLogger()
 
-        async {
+        task {
             use stream = new StreamReader(req.Body)
-
-            let! body = stream.ReadToEndAsync() |> Async.AwaitTask
+            let! body = stream.ReadToEndAsync()
 
             match deserialize body with
             | Ok highscore ->
                 match highscore |> HighScoreDto.toHighScore with
                 | Ok highscore ->
                     log.LogInformation $"persisting %A{highscore}"
-
                     let! dbRes = persist DbUtils.highscores (HighScoreDocument.fromHighScore highscore)
 
                     let res =
@@ -117,4 +111,3 @@ module Submit =
                 res.WriteString $"%A{e}"
                 return res
         }
-        |> Async.StartAsTask

@@ -21,7 +21,7 @@ resource "azurerm_function_app" "highScoreApi" {
   storage_account_name       = data.azurerm_storage_account.st.name
   storage_account_access_key = data.azurerm_storage_account.st.primary_access_key
   os_type                    = "linux"
-  version                    = "~3"
+  version                    = "~4"
 
   app_settings = {
     "CONNECTION_STRING"               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongoConnectionString.id})"

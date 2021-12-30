@@ -20,8 +20,9 @@ jobs:
 
       - name: Run tests
         run: |
-          cd highscore-api/HighScoreApi.Tests
-          dotnet test
+          cd highscore-api
+          docker run --rm -v "$PWD:/app" -w /app mcr.microsoft.com/dotnet/sdk:6.0 \
+            dotnet test HighScoreApi.Tests
 
       - name: Build with docker
         run: |

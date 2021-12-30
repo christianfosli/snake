@@ -25,7 +25,7 @@ module TopTen =
                 .Sort.Descending(fun s -> s.Score :> obj)
                 .Ascending(fun s -> s.TimeStamp :> obj)
 
-        async {
+        task {
             try
                 let! topten =
                     collection
@@ -33,7 +33,6 @@ module TopTen =
                         .Sort(sortByScore)
                         .Limit(10)
                         .ToListAsync()
-                    |> Async.AwaitTask
 
                 return
                     topten
@@ -72,22 +71,17 @@ module TopTen =
         =
         let log = ctx.GetLogger()
 
-        async {
+        task {
             match dateFromQueryParam ctx "since" with
             | Ok since ->
                 log.LogInformation $"Finding topten since %A{since}"
-
                 let! topScores = topten DbUtils.highscores since
 
                 match topScores with
                 | Ok scores ->
                     log.LogInformation $"%d{Seq.length scores} scores found"
                     let res = req.CreateResponse HttpStatusCode.OK
-
-                    do!
-                        res.WriteAsJsonAsync(scores).AsTask()
-                        |> Async.AwaitTask
-
+                    do! res.WriteAsJsonAsync(scores)
                     return res
 
                 | Error e ->
@@ -96,17 +90,13 @@ module TopTen =
                     let res =
                         req.CreateResponse HttpStatusCode.InternalServerError
 
-                    do!
-                        res.WriteStringAsync "Server error trying to fetch topten from database."
-                        |> Async.AwaitTask
-
+                    do! res.WriteStringAsync "Server error trying to fetch topten from database."
                     return res
 
             | Error parseError ->
                 let res =
                     req.CreateResponse HttpStatusCode.BadRequest
 
-                do! res.WriteStringAsync parseError |> Async.AwaitTask
+                do! res.WriteStringAsync parseError
                 return res
         }
-        |> Async.StartAsTask
