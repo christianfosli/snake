@@ -35,10 +35,18 @@ pub enum GameStatus {
 pub fn run() -> Result<(), JsValue> {
     wasm_logger::init(wasm_logger::Config::default());
 
+    let fallback_url = || {
+        log::debug!("Using current base url as fallback url");
+        window()
+            .location()
+            .origin()
+            .unwrap_or_else(|_| "".to_string())
+    };
+
     let highscore_base_url = match option_env!("HIGHSCORE_API_BASE_URL") {
-        Some(url) if url.is_empty() => window().location().origin().unwrap_or("".to_string()),
+        Some(url) if url.is_empty() => fallback_url(),
         Some(url) => String::from(url),
-        None => window().location().origin().unwrap_or("".to_string()),
+        None => fallback_url(),
     };
 
     log::debug!("Using highscore api base url {:?}", &highscore_base_url);
