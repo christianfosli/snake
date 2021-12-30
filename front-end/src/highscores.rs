@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use gloo_dialogs::prompt;
 use gloo_utils::document;
 use js_sys::{Date, Error};
 use serde::{Deserialize, Serialize};
@@ -63,7 +64,7 @@ pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
     Ok(())
 }
 
-pub async fn check_and_submit(client: &HighScoreApi, score: usize) -> Result<(), JsValue> {
+pub async fn check_and_submit(client: &HighScoreApi, score: usize) -> Result<(), anyhow::Error> {
     let start_of_year = Utc
         .ymd(Date::new_0().get_utc_full_year() as i32, 1, 1)
         .and_hms(0, 0, 0);
@@ -73,9 +74,7 @@ pub async fn check_and_submit(client: &HighScoreApi, score: usize) -> Result<(),
     if top_yearly_scores.len() < 10 || top_yearly_scores.iter().any(|hs| hs.score < score) {
         log::debug!("Score {} is a highscore!", score);
 
-        let window = web_sys::window().ok_or_else(|| Error::new("Window was none"))?;
-        let highscore = window
-            .prompt_with_message("Please enter your name for the highscore table")?
+        let highscore = prompt("Please enter your name for the highscore table", None)
             .map(|user_name| HighScore { user_name, score });
 
         match &highscore {

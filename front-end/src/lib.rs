@@ -1,6 +1,7 @@
 use futures::stream::StreamExt;
+use gloo_dialogs::alert;
 use gloo_timers::callback::Interval;
-use gloo_utils::document;
+use gloo_utils::{document, window};
 use js_sys::Error;
 use std::{
     f64::consts::PI,
@@ -34,15 +35,23 @@ pub enum GameStatus {
 pub fn run() -> Result<(), JsValue> {
     wasm_logger::init(wasm_logger::Config::default());
 
-    let highscore_base_url = option_env!("HIGHSCORE_API_BASE_URL").unwrap_or("");
+    let highscore_base_url = match option_env!("HIGHSCORE_API_BASE_URL") {
+        Some(url) if url.is_empty() => window().location().origin().unwrap_or("".to_string()),
+        Some(url) => String::from(url),
+        None => window().location().origin().unwrap_or("".to_string()),
+    };
+
     log::debug!("Using highscore api base url {:?}", &highscore_base_url);
 
-    spawn_local(async move {
-        let highscore_api = HighScoreApi::new(highscore_base_url.to_owned());
-        highscores::fetch_and_set(&highscore_api)
-            .await
-            .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err));
-    });
+    {
+        let base_url = highscore_base_url.clone();
+        spawn_local(async move {
+            let highscore_api = HighScoreApi::new(&base_url);
+            highscores::fetch_and_set(&highscore_api)
+                .await
+                .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err));
+        });
+    }
 
     let doc = document();
     let html_container: HtmlElement = doc
@@ -155,8 +164,9 @@ pub fn run() -> Result<(), JsValue> {
             };
             *status.write().unwrap() = GameStatus::GameOver;
 
+            let base_url = highscore_base_url.clone();
             spawn_local(async move {
-                let highscore_api = HighScoreApi::new(highscore_base_url.into());
+                let highscore_api = HighScoreApi::new(&base_url);
 
                 game_over(&highscore_api, &dead_snake)
                     .await
@@ -209,7 +219,13 @@ async fn game_over(highscore_api: &HighScoreApi, snake: &Snake) -> Result<(), Js
     )?;
 
     log::debug!("Checking if score is a highscore");
-    highscores::check_and_submit(highscore_api, apple_count).await?;
+    match highscores::check_and_submit(highscore_api, apple_count).await {
+        Ok(()) => {}
+        Err(e) => {
+            log::error!("{:?}", e);
+            alert(&format!("An error occured: {}", e));
+        }
+    }
 
     log::debug!("Refreshing highscore tables");
     highscores::fetch_and_set(highscore_api).await?;
