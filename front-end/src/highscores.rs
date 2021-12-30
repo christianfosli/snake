@@ -1,4 +1,5 @@
 use chrono::prelude::*;
+use gloo_utils::document;
 use js_sys::{Date, Error};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::{JsCast, JsValue};
@@ -23,10 +24,7 @@ impl HighScore {
 }
 
 pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
-    let dom = web_sys::window()
-        .ok_or_else(|| Error::new("Window was none"))?
-        .document()
-        .ok_or_else(|| Error::new("Window contains no document"))?;
+    let dom = document();
 
     let topten_alltime_fut = client.top_ten(None);
 
@@ -36,13 +34,13 @@ pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
 
     let topten_yearly_fut = client.top_ten(Some(start_of_year));
 
-    let topten_alltime_html = topten_alltime_fut
-        .await
-        .map(|hs| hs.iter().map(HighScore::to_table_row).collect::<String>())
-        .unwrap_or_else(|err| {
+    let topten_alltime_html = topten_alltime_fut.await.map_or_else(
+        |err| {
             log::error!("Error fetching top ten alltime: {:?}", err);
             String::from("<tr><td colspan=\"2\">Failed to fetch top ten alltime 😩</td></tr>")
-        });
+        },
+        |hs| hs.iter().map(HighScore::to_table_row).collect::<String>(),
+    );
 
     dom.query_selector("#topten-alltime tbody")?
         .ok_or_else(|| Error::new("Cant find topten alltime table"))
