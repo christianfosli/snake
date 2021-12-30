@@ -26,6 +26,17 @@ jobs:
       - name: Wasm test
         run: wasm-pack test --headless --chrome
 
+  audit:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Scan dependencies
+        run: cargo-audit audit
+
   build_and_deploy:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-20.04
