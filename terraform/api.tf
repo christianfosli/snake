@@ -26,7 +26,7 @@ resource "azurerm_function_app" "highScoreApi" {
   app_settings = {
     "CONNECTION_STRING"               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongoConnectionString.id})"
     "FUNCTIONS_WORKER_RUNTIME"        = "dotnet-isolated"
-    "APPINSIGHTS_INSTRUMENTATION_KEY" = azurerm_application_insights.appInsights.instrumentation_key
+    "APPINSIGHTS_INSTRUMENTATIONKEY"  = azurerm_application_insights.appInsights.instrumentation_key
     "WEBSITE_ENABLE_SYNC_UPDATE_SITE" = true
   }
 
