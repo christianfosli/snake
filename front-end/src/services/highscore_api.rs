@@ -11,6 +11,7 @@ pub struct HighScoreApi {
 
 #[derive(Serialize)]
 struct QueryParams {
+    #[serde(with = "time::serde::rfc3339")]
     since: OffsetDateTime,
 }
 
@@ -53,5 +54,18 @@ impl HighScoreApi {
             .error_for_status()?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use time::format_description::well_known::Rfc3339;
+
+    #[test]
+    fn should_serialize_query_params_correctly() {
+        let since = OffsetDateTime::parse("2021-01-01T00:00:00Z", &Rfc3339).unwrap();
+        let query_params = serde_qs::to_string(&QueryParams { since }).unwrap();
+        assert_eq!("since=2021-01-01T00%3A00%3A00Z", &query_params);
     }
 }
