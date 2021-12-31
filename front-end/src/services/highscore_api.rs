@@ -1,6 +1,6 @@
-use chrono::{DateTime, Utc};
 use reqwest::Client;
 use serde::Serialize;
+use time::OffsetDateTime;
 
 use crate::highscores::HighScore;
 
@@ -11,7 +11,7 @@ pub struct HighScoreApi {
 
 #[derive(Serialize)]
 struct QueryParams {
-    since: DateTime<Utc>,
+    since: OffsetDateTime,
 }
 
 impl HighScoreApi {
@@ -24,7 +24,7 @@ impl HighScoreApi {
 
     pub async fn top_ten(
         &self,
-        since: Option<DateTime<Utc>>,
+        since: Option<OffsetDateTime>,
     ) -> Result<Vec<HighScore>, anyhow::Error> {
         let request_url = if let Some(since) = since {
             let query_params = serde_qs::to_string(&QueryParams { since })?;

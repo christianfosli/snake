@@ -1,8 +1,8 @@
-use chrono::prelude::*;
 use gloo_dialogs::prompt;
 use gloo_utils::document;
-use js_sys::{Date, Error};
+use js_sys::Error;
 use serde::{Deserialize, Serialize};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::HtmlElement;
 
@@ -24,18 +24,36 @@ impl HighScore {
     }
 }
 
+fn start_of_year() -> Result<OffsetDateTime, anyhow::Error> {
+    // Have to use JS because SystemTime::now() is not implemented for wasm
+    // See https://github.com/rust-lang/rust/issues/48564
+    let millis = js_sys::Date::now() as i64;
+    let now = OffsetDateTime::from_unix_timestamp(millis / 1000)?;
+    let jan_first = format!("{}-01-01T00:00:00Z", now.year());
+    Ok(OffsetDateTime::parse(&jan_first, &Rfc3339)?)
+}
+
 pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
     let dom = document();
 
     let topten_alltime_fut = client.top_ten(None);
 
-    let start_of_year = Utc
-        .ymd(Date::new_0().get_utc_full_year() as i32, 1, 1)
-        .and_hms(0, 0, 0);
+    if let Ok(start_of_year) = start_of_year() {
+        let top_yearly_html = client.top_ten(Some(start_of_year)).await.map_or_else(
+            |err| {
+                log::error!("Error fetching top ten yearly: {:?}", err);
+                String::from("<tr><td colspan=\"2\">Failed to fetch top ten this year 😩</td></tr>")
+            },
+            |hs| hs.iter().map(HighScore::to_table_row).collect::<String>(),
+        );
 
-    let topten_yearly_fut = client.top_ten(Some(start_of_year));
+        dom.query_selector("#topten-yearly tbody")?
+            .ok_or_else(|| Error::new("Cant find topten yearly table"))
+            .map(JsCast::dyn_into::<HtmlElement>)?
+            .map(|table| table.set_inner_html(&top_yearly_html))?;
+    }
 
-    let topten_alltime_html = topten_alltime_fut.await.map_or_else(
+    let top_alltime_html = topten_alltime_fut.await.map_or_else(
         |err| {
             log::error!("Error fetching top ten alltime: {:?}", err);
             String::from("<tr><td colspan=\"2\">Failed to fetch top ten alltime 😩</td></tr>")
@@ -46,30 +64,13 @@ pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
     dom.query_selector("#topten-alltime tbody")?
         .ok_or_else(|| Error::new("Cant find topten alltime table"))
         .map(JsCast::dyn_into::<HtmlElement>)?
-        .map(|table| table.set_inner_html(&topten_alltime_html))?;
-
-    let topten_yearly_html = topten_yearly_fut
-        .await
-        .map(|hs| hs.iter().map(HighScore::to_table_row).collect::<String>())
-        .unwrap_or_else(|err| {
-            log::error!("Error fetching top ten yearly: {:?}", err);
-            String::from("<tr><td colspan=\"2\">Failed to fetch top ten this year 😩</td></tr>")
-        });
-
-    dom.query_selector("#topten-yearly tbody")?
-        .ok_or_else(|| Error::new("Cant find topten yearly table"))
-        .map(JsCast::dyn_into::<HtmlElement>)?
-        .map(|table| table.set_inner_html(&topten_yearly_html))?;
+        .map(|table| table.set_inner_html(&top_alltime_html))?;
 
     Ok(())
 }
 
 pub async fn check_and_submit(client: &HighScoreApi, score: usize) -> Result<(), anyhow::Error> {
-    let start_of_year = Utc
-        .ymd(Date::new_0().get_utc_full_year() as i32, 1, 1)
-        .and_hms(0, 0, 0);
-
-    let top_yearly_scores = client.top_ten(Some(start_of_year)).await?;
+    let top_yearly_scores = client.top_ten(Some(start_of_year()?)).await?;
 
     if top_yearly_scores.len() < 10 || top_yearly_scores.iter().any(|hs| hs.score < score) {
         log::debug!("Score {} is a highscore!", score);
