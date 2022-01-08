@@ -1,3 +1,4 @@
+//! Fetch, render and submit highscores
 use gloo_dialogs::prompt;
 use gloo_utils::document;
 use js_sys::Error;

@@ -1,3 +1,4 @@
+//! Converts key presses to commands
 use crate::{Direction, GameStatus};
 use futures::channel::mpsc;
 use futures::stream::Stream;
