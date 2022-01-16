@@ -2,10 +2,10 @@ name: wasm_app
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
     types: [opened, synchronize, reopened, closed]
-    branches: [master]
+    branches: [main]
 
 defaults:
   run:

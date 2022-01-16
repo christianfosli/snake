@@ -2,12 +2,12 @@ name: highscore_functions
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - highscore-api/**
       - .github/workflows/highscore_functions.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - highscore-api/**
       - .github/workflows/highscore_functions.yml

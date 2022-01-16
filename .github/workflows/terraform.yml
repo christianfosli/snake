@@ -2,12 +2,12 @@ name: terraform
 
 on:
   push:
-    branches: [master]
+    branches: [main]
     paths:
       - terraform/**
       - .github/workflows/terraform.yml
   pull_request:
-    branches: [master]
+    branches: [main]
     paths:
       - terraform/**
       - .github/workflows/terraform.yml
