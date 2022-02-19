@@ -9,18 +9,11 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 
 ## Architecture 🏗
 
-```
-|--------------------------------|      |-------------------------|      |---------|
-| Front-end                      |      | Highscore API           |      | Database| 
-|                                | <--> |                         | <--> |         |
-| Snake implemented in rust(wasm)|      | Azure Functions with F# |      | MongoDB |
-| Deployed as Azure static webapp|      |                         | <-|  |---------|
-|--------------------------------|      |-------------------------|   V             
-                                                                    |---------------|
-  https://www.playsnake.no          https://highscores.playsnake.no | Secrets store |
-                                                                    |               |
-                                                                    | Azure KeyVault|
-                                                                    |---------------|
+```mermaid
+graph TD
+    A(<b>Front-end</b><br/>Snake implemented in rust/wasm<br/>Deployed as Azure static webapp<br/>https://www.playsnake.no)-->B
+    B(<b>Highscore API</b><br/>Azure functions with F#<br/>https://highscores.playsnake.no)-->C(Mongo DB Database)
+    B-->D(Azure Key Vault)
 ```
 
 All the cloud infra is Infrastructure-as-Code managed by Terraform.
