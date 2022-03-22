@@ -136,6 +136,20 @@ td {
   padding: 0.5rem;
 }
 
+.loading {
+  border: 0.75rem solid lightcyan;
+  border-top: 0.75rem solid #bada55;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Privacy Policy */
 
 #privacy-policy {
