@@ -42,7 +42,7 @@ pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
     if let Ok(start_of_year) = start_of_year() {
         let top_yearly_html = client.top_ten(Some(start_of_year)).await.map_or_else(
             |err| {
-                log::error!("Error fetching top ten yearly: {:?}", err);
+                log::error!("Error fetching top ten yearly: {err:?}");
                 String::from("<tr><td colspan=\"2\">Failed to fetch top ten this year 😩</td></tr>")
             },
             |hs| hs.iter().map(HighScore::to_table_row).collect::<String>(),
@@ -56,7 +56,7 @@ pub async fn fetch_and_set(client: &HighScoreApi) -> Result<(), JsValue> {
 
     let top_alltime_html = topten_alltime_fut.await.map_or_else(
         |err| {
-            log::error!("Error fetching top ten alltime: {:?}", err);
+            log::error!("Error fetching top ten alltime: {err:?}");
             String::from("<tr><td colspan=\"2\">Failed to fetch top ten alltime 😩</td></tr>")
         },
         |hs| hs.iter().map(HighScore::to_table_row).collect::<String>(),
@@ -74,7 +74,7 @@ pub async fn check_and_submit(client: &HighScoreApi, score: usize) -> Result<(),
     let top_yearly_scores = client.top_ten(Some(start_of_year()?)).await?;
 
     if top_yearly_scores.len() < 10 || top_yearly_scores.iter().any(|hs| hs.score < score) {
-        log::debug!("Score {} is a highscore!", score);
+        log::debug!("Score {score} is a highscore!");
 
         let highscore = prompt("Please enter your name for the highscore table", None)
             .map(|user_name| HighScore { user_name, score });

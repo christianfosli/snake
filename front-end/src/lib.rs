@@ -62,14 +62,14 @@ pub fn run() -> Result<(), JsValue> {
         None => fallback_url(),
     };
 
-    log::debug!("Using highscore api base url {:?}", &highscore_url);
+    log::debug!("Using highscore api base url {highscore_url}");
     {
         let base_url = highscore_url.clone();
         spawn_local(async move {
             let highscore_api = HighScoreApi::new(&base_url);
             highscores::fetch_and_set(&highscore_api)
                 .await
-                .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {:?}", &err));
+                .unwrap_or_else(|err| log::error!("Unable to fetch highscores due to {err:?}"));
         });
     }
 
@@ -89,7 +89,7 @@ pub fn run() -> Result<(), JsValue> {
             game_over(&highscore_api, apples)
                 .await
                 .unwrap_or_else(|err| {
-                    log::error!("End-of-Game actions failed due to {:?}", err);
+                    log::error!("End-of-Game actions failed due to {err:?}");
                 });
         });
     };
@@ -129,17 +129,17 @@ where
 
                         *game_status = GameStatus::Playing;
                         render::update_statusbar(&doc, *game_status).unwrap_or_else(|e| {
-                            log::error!("Failed to update game status due to {:?}", e);
+                            log::error!("Failed to update game status due to {e:?}");
                         });
 
                         render::clear_canvas(&doc).unwrap_or_else(|e| {
-                            log::error!("Failed to clear screen due to {:?}", e);
+                            log::error!("Failed to clear screen due to {e:?}");
                         });
 
                         render::snake(&doc, &snake)
-                            .unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
+                            .unwrap_or_else(|e| log::error!("Failed to draw snake due to {e:?}"));
                         render::apple(&doc, &snake.target.expect("target was undefined"))
-                            .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
+                            .unwrap_or_else(|e| log::error!("Failed to draw apple due to {e:?}"));
                     }
                     Command::Stop => {
                         let mut snake = snake.write().unwrap();
@@ -159,7 +159,7 @@ quit: <q>",
                             2,
                         )
                         .unwrap_or_else(|e| {
-                            log::error!("Failed to write on canvas due to {:?}", e);
+                            log::error!("Failed to write on canvas due to {e:?}");
                         });
                     }
                     Command::Move(d)
@@ -169,7 +169,7 @@ quit: <q>",
                         *dir.write().unwrap() = d;
                     }
                     fallback => {
-                        log::debug!("Ignored command {:?}", fallback);
+                        log::debug!("Ignored command {fallback:?}");
                     }
                 }
             }
@@ -202,17 +202,17 @@ quit: <q>",
 
         match old_tail {
             Some(tail) => render::clear_pos(&doc, &tail)
-                .unwrap_or_else(|e| log::error!("Failed to clear tail due to {:?}", e)),
+                .unwrap_or_else(|e| log::error!("Failed to clear tail due to {e:?}")),
             None if snake.target.is_some() => {
                 render::apple(&doc, &snake.target.expect("target was undefined"))
-                    .unwrap_or_else(|e| log::error!("Failed to draw apple due to {:?}", e));
+                    .unwrap_or_else(|e| log::error!("Failed to draw apple due to {e:?}"));
             }
             None => render::text(&doc, "💯 u crazy!! 💯", 8)
                 // The snake now covers the whole screen!
-                .unwrap_or_else(|e| log::error!("Failed to write on canvas due to {:?}", e)),
+                .unwrap_or_else(|e| log::error!("Failed to write on canvas due to {e:?}")),
         }
         render::snake(&doc, &snake)
-            .unwrap_or_else(|e| log::error!("Failed to draw snake due to {:?}", e));
+            .unwrap_or_else(|e| log::error!("Failed to draw snake due to {e:?}"));
         apple_counter.set_inner_text(&format!("🍎{}", snake.apple_count()));
     })
     .forget();
@@ -233,12 +233,12 @@ async fn game_over(highscore_api: &HighScoreApi, apple_count: usize) -> Result<(
         4,
     )?;
 
-    log::debug!("Checking if score {} is a highscore", apple_count);
+    log::debug!("Checking if score {apple_count} is a highscore");
     match highscores::check_and_submit(highscore_api, apple_count).await {
         Ok(()) => {}
         Err(e) => {
-            log::error!("{:?}", e);
-            alert(&format!("An error occured: {}", e));
+            log::error!("{e:?}");
+            alert(&format!("An error occured: {e}"));
         }
     }
 

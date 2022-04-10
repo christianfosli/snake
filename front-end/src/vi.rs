@@ -30,10 +30,10 @@ impl Vi {
             "keydown",
             EventListenerOptions::enable_prevent_default(),
             move |event| {
-                let event: &KeyboardEvent = event.dyn_ref::<KeyboardEvent>().unwrap();
+                let event = event.dyn_ref::<KeyboardEvent>().unwrap();
                 let key: &str = &event.key();
                 let status = *status.read().unwrap();
-                let dir: Option<Command> = match key {
+                let dir = match key {
                     "h" | "ArrowLeft" if status == GameStatus::Playing => {
                         Some(Command::Move(Direction::Left))
                     }

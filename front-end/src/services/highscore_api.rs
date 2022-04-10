@@ -29,9 +29,9 @@ impl HighScoreApi {
     ) -> Result<Vec<HighScore>, anyhow::Error> {
         let request_url = if let Some(since) = since {
             let query_params = serde_qs::to_string(&QueryParams { since })?;
-            format!("{}/api/topten?{}", self.base_url, query_params)
+            format!("{base}/api/topten?{query_params}", base = self.base_url)
         } else {
-            format!("{}/api/topten", self.base_url)
+            format!("{base}/api/topten", base = self.base_url)
         };
 
         let res = self
@@ -47,7 +47,7 @@ impl HighScoreApi {
 
     pub async fn submit(&self, highscore: &HighScore) -> Result<(), anyhow::Error> {
         self.client
-            .post(&format!("{}/api/submit", self.base_url))
+            .post(&format!("{base}/api/submit", base = self.base_url))
             .json(highscore)
             .send()
             .await?

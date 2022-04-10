@@ -111,7 +111,7 @@ pub fn update_statusbar(doc: &Document, status: GameStatus) -> Result<(), JsValu
         .map(JsCast::dyn_into)
         .ok_or_else(|| Error::new("Document had no game status element"))??;
 
-    game_status_element.set_inner_text(&format!("{}", status));
+    game_status_element.set_inner_text(&format!("{status}"));
 
     Ok(())
 }
