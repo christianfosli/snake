@@ -13,7 +13,7 @@ defaults:
 
 jobs:
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
 
@@ -27,7 +27,7 @@ jobs:
         run: wasm-pack test --headless --chrome
 
   audit:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
 
@@ -39,7 +39,7 @@ jobs:
 
   build_and_deploy:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Build and Deploy
     env:
       DOCKER_BUILDKIT: "1"
@@ -86,7 +86,7 @@ jobs:
 
   close_pull_request:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     name: Close Pull Request
     steps:
       - name: Close Pull Request

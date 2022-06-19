@@ -21,7 +21,7 @@ env:
 
 jobs:
   staging:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       TF_VAR_ENVIRONMENT: staging
     defaults:
@@ -48,7 +48,7 @@ jobs:
   prod:
     if: github.event_name != 'pull_request'
     needs: staging
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       TF_VAR_ENVIRONMENT: prod
     defaults:
