@@ -25,6 +25,8 @@ resource "azurerm_dns_cname_record" "highScoreApi" {
   zone_name           = "playsnake.no"  # hardcoded because sometimes different env
   resource_group_name = "rg-snake-prod" # hardcoded because sometimes different env
   ttl                 = 300
-  target_resource_id  = azurerm_linux_function_app.highScoreApi.id
-  tags                = local.common_tags
+  # record              = azurerm_linux_function_app.highScoreApi.default_hostname
+  # default_hostname incorrenctly returns empty string - see upstream bug report https://github.com/hashicorp/terraform-provider-azurerm/issues/16263
+  record = "${azurerm_linux_function_app.highScoreApi.name}.azurewebsites.net"
+  tags   = local.common_tags
 }
