@@ -23,8 +23,8 @@ resource "azurerm_key_vault_access_policy" "tfAgent" {
 
 resource "azurerm_key_vault_access_policy" "highScoreFunc" {
   key_vault_id = azurerm_key_vault.vault.id
-  tenant_id    = azurerm_function_app.highScoreApi.identity.0.tenant_id
-  object_id    = azurerm_function_app.highScoreApi.identity.0.principal_id
+  tenant_id    = azurerm_linux_function_app.highScoreApi.identity.0.tenant_id
+  object_id    = azurerm_linux_function_app.highScoreApi.identity.0.principal_id
 
   key_permissions         = ["Get"]
   secret_permissions      = ["Get"]
