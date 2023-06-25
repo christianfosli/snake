@@ -40,7 +40,7 @@ impl fmt::Display for GameStatus {
             Self::Playing => "Playing 🐍",
             Self::GameOver => "Game over",
         };
-        write!(f, "{}", disp)
+        write!(f, "{disp}")
     }
 }
 
@@ -53,7 +53,7 @@ pub fn run() -> Result<(), JsValue> {
         window()
             .location()
             .origin()
-            .unwrap_or_else(|_| "".to_string())
+            .unwrap_or_else(|_| String::new())
     };
 
     let highscore_url = match option_env!("HIGHSCORE_API_BASE_URL") {
