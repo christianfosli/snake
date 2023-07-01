@@ -20,13 +20,3 @@ resource "azurerm_key_vault_access_policy" "tfAgent" {
   secret_permissions      = ["Get", "Set", "Delete", "Purge", "Recover", "Restore"]
   certificate_permissions = ["Get"]
 }
-
-resource "azurerm_key_vault_access_policy" "highScoreFunc" {
-  key_vault_id = azurerm_key_vault.vault.id
-  tenant_id    = azurerm_linux_function_app.highScoreApi.identity.0.tenant_id
-  object_id    = azurerm_linux_function_app.highScoreApi.identity.0.principal_id
-
-  key_permissions         = ["Get"]
-  secret_permissions      = ["Get"]
-  certificate_permissions = ["Get"]
-}

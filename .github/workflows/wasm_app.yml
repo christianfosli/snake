@@ -7,6 +7,9 @@ on:
     types: [opened, synchronize, reopened, closed]
     branches: [main]
 
+permissions:
+  packages: write
+
 defaults:
   run:
     working-directory: front-end
@@ -15,7 +18,7 @@ jobs:
   test:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -26,17 +29,6 @@ jobs:
       - name: Wasm test
         run: wasm-pack test --headless --chrome
 
-  audit:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Install cargo-audit
-        run: cargo install cargo-audit
-
-      - name: Scan dependencies
-        run: cargo-audit audit
-
   build_and_deploy:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-22.04
@@ -44,7 +36,7 @@ jobs:
     env:
       DOCKER_BUILDKIT: "1"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Set variables for staging
         if: github.event_name == 'pull_request'
@@ -63,13 +55,28 @@ jobs:
           docker build \
             --build-arg VERSION=$BUILD_VERSION \
             --build-arg HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL \
-            -t snake-frontend:$BUILD_VERSION \
-            -t snake-frontend:latest \
+            -t ghcr.io/christianfosli/snake/wasm-app:$BUILD_VERSION \
+            -t ghcr.io/christianfosli/snake/wasm-app:latest \
             .
 
-      - name: Extract files to deploy
+      - name: Login to ghcr
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push
+        # Not needed for deployment, but might be nice for running locally
+        if: github.event_name != 'pull_request'
         run: |
-          container="$(docker create snake-frontend:latest)"
+          docker push --all-tags ghcr.io/christianfosli/snake/wasm-app
+
+      - name: Extract files to deploy
+        # Since we deploy to azure static web app rather than container we need to extract the build files to deploy
+        run: |
+          container="$(docker create ghcr.io/christianfosli/snake/wasm-app:latest)"
           docker cp "$container:/usr/share/nginx/html" out
 
       - name: Deploy

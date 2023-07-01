@@ -6,6 +6,6 @@ server {
   }
 
   location /api/ {
-  	proxy_pass ${API_URL}/api/;
+  	proxy_pass ${API_URL}/;
   }
 }

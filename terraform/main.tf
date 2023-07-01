@@ -4,6 +4,7 @@ terraform {
     storage_account_name = "stsnakestaging"
     container_name       = "tfstate"
     key                  = "staging.terraform.tfstate"
+    use_oidc             = true
   }
 
   required_providers {
@@ -14,5 +15,6 @@ terraform {
 }
 
 provider "azurerm" {
+  use_oidc = true
   features {}
 }

@@ -7,20 +7,20 @@ services:
       args:
         BUILD_PROFILE: dev
     environment:
-      API_URL: http://api
+      API_URL: http://api:3000
     ports:
       - '8080:80'
     depends_on:
       - api
   api:
     build:
-      context: highscore-api/HighScoreApi
+      context: ./highscore-api
       args:
-        CRON_CLEANUP_SCHEDULE: '0 * * * * *'
+        CARGO_INSTALL_OPTIONS: --debug
     environment:
-      CONNECTION_STRING: mongodb://root:secret@db
+      DB_CONNSTR: mongodb://root:secret@db
     ports:
-      - '8081:80'
+      - '3000:3000'
     depends_on:
       - db
   db:

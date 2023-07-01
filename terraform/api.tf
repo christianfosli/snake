@@ -1,69 +1,76 @@
-resource "azurerm_service_plan" "apiPlan" {
-  name                = "asp-snake-${var.ENVIRONMENT}"
-  location            = "West Europe" # Norway not yet supported for func with Linux consumption plan
-  resource_group_name = data.azurerm_resource_group.rg.name
-  os_type             = "Linux"
-  sku_name            = "Y1"
-  tags                = local.common_tags
+resource "azurerm_container_app_environment" "containerAppEnv" {
+  name                       = "cae-snake-${var.ENVIRONMENT}"
+  location                   = data.azurerm_resource_group.rg.location
+  resource_group_name        = data.azurerm_resource_group.rg.name
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.logWorkspace.id
 }
 
-resource "azurerm_linux_function_app" "highScoreApi" {
-  name                        = "func-snakehighscores-${var.ENVIRONMENT}"
-  location                    = azurerm_service_plan.apiPlan.location
-  resource_group_name         = azurerm_service_plan.apiPlan.resource_group_name
-  service_plan_id             = azurerm_service_plan.apiPlan.id
-  storage_account_name        = data.azurerm_storage_account.st.name
-  storage_account_access_key  = data.azurerm_storage_account.st.primary_access_key
-  functions_extension_version = "~4"
+resource "azurerm_container_app" "highscoreApi" {
+  name                         = "ca-snakehighscoreapi-${var.ENVIRONMENT}"
+  container_app_environment_id = azurerm_container_app_environment.containerAppEnv.id
+  resource_group_name          = azurerm_container_app_environment.containerAppEnv.resource_group_name
+  revision_mode                = "Single"
 
-  app_settings = {
-    "CONNECTION_STRING"               = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.mongoConnectionString.id})"
-    "FUNCTIONS_WORKER_RUNTIME"        = "dotnet-isolated"
-    "APPINSIGHTS_INSTRUMENTATIONKEY"  = azurerm_application_insights.appInsights.instrumentation_key
-    "WEBSITE_ENABLE_SYNC_UPDATE_SITE" = true
-  }
+  template {
+    min_replicas = 0
+    max_replicas = 3
 
-  auth_settings {
-    enabled = false
-  }
+    container {
+      name   = "highscore-api"
+      image  = "ghcr.io/christianfosli/snake/highscore-api:latest" # <-- tag will be overridden by ci/cd
+      cpu    = 0.25
+      memory = "0.5Gi"
 
-  site_config {
-    ftps_state        = "Disabled"
-    http2_enabled     = true
-    use_32_bit_worker = false
+      env {
+        name        = "DB_CONNSTR"
+        secret_name = "db-connstr"
+      }
 
-    cors {
-      allowed_origins     = ["*"]
-      support_credentials = false
+      env {
+        name  = "LISTEN_ADDR"
+        value = "0.0.0.0:3000"
+      }
+
+      liveness_probe {
+        transport = "HTTP"
+        path      = "/livez"
+        port      = 3000
+      }
+
+      readiness_probe {
+        transport = "HTTP"
+        path      = "/readyz"
+        port      = 3000
+      }
     }
   }
 
-  identity {
-    type = "SystemAssigned"
+  ingress {
+    external_enabled = true
+    target_port      = 3000
+
+    traffic_weight {
+      percentage = 100
+    }
+
+    # traffic weight will be adjusted during CI/CD as new revisions are published
+
+    # custom domain must be configured in the azure portal for now
+    # because custom domain with managed TLS certificates is currently (July, 2023)
+    # not supported by azurerm terraform provider
+
+    # cors must be configured in the azure portal for now
+    # because it is currently (July, 2023) not supported by azurerm terraform provider
+  }
+
+  secret {
+    name  = "db-connstr"
+    value = azurerm_key_vault_secret.mongoConnectionString.value
   }
 
   lifecycle {
-    ignore_changes = [
-      app_settings["WEBSITE_RUN_FROM_PACKAGE"]
-    ]
+    ignore_changes = [template[0].container[0].image, ingress[0]]
   }
 
   tags = local.common_tags
-}
-
-resource "azurerm_app_service_custom_hostname_binding" "highScoreApi" {
-  hostname            = trimsuffix(azurerm_dns_cname_record.highScoreApi.fqdn, ".")
-  app_service_name    = azurerm_linux_function_app.highScoreApi.name
-  resource_group_name = azurerm_linux_function_app.highScoreApi.resource_group_name
-}
-
-resource "azurerm_app_service_managed_certificate" "highScoreApi" {
-  custom_hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
-  tags                       = local.common_tags
-}
-
-resource "azurerm_app_service_certificate_binding" "highScoreApi" {
-  hostname_binding_id = azurerm_app_service_custom_hostname_binding.highScoreApi.id
-  certificate_id      = azurerm_app_service_managed_certificate.highScoreApi.id
-  ssl_state           = "SniEnabled"
 }

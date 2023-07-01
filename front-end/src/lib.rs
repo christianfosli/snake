@@ -49,11 +49,15 @@ pub fn run() -> Result<(), JsValue> {
     wasm_logger::init(wasm_logger::Config::default());
 
     let fallback_url = || {
-        log::debug!("Using current base url as fallback url");
+        log::debug!("Using current base url + /api as fallback url");
         window()
             .location()
             .origin()
-            .unwrap_or_else(|_| String::new())
+            .map(|url| format!("{url}/api"))
+            .unwrap_or_else(|_| {
+                log::warn!("Unable to determine current base url. Trying with a relative one. This probably won't work.");
+                String::from("/api")
+            })
     };
 
     let highscore_url = match option_env!("HIGHSCORE_API_BASE_URL") {

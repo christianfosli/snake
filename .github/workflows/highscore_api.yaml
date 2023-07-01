@@ -1,0 +1,83 @@
+name: highscore_api
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - highscore-api/**
+      - .github/workflows/highscore_api.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - highscore-api/**
+      - .github/workflows/highscore_api.yaml
+
+permissions:
+  # required for federated credentials to access azure
+  id-token: write
+  # required for federated credentials to access azure
+  contents: read
+  # required to push to ghcr
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build with docker
+      run: |
+        tags="-t ghcr.io/christianfosli/snake/highscore-api:$(git rev-parse --short HEAD)"
+        if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+          printf 'Banch is main! Tagging with latest\n'
+          tags="$tags -t ghcr.io/christianfosli/snake/highscore-api:latest"
+        fi
+
+        cd highscore-api
+        docker build $tags .
+      env:
+        DOCKER_BUILDKIT: 1
+
+    - name: Login to ghcr
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Push
+      run: docker push --all-tags ghcr.io/christianfosli/snake/highscore-api
+
+  deploy_staging:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.ARM_CLIENT_ID }}
+        subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        tenant-id: ${{ secrets.ARM_TENANT_ID }}
+
+    - run: |
+        az containerapp update -n ca-snakehighscoreapi-staging -g rg-snake-staging \
+          --image "ghcr.io/christianfosli/snake/highscore-api:$(git rev-parse --short $HEAD)"
+
+  deploy_prod:
+    if: github.event_name != 'pull_request'
+    needs: deploy_staging
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: azure/login@v1
+      with:
+        client-id: ${{ secrets.ARM_CLIENT_ID }}
+        subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+        tenant-id: ${{ secrets.ARM_TENANT_ID }}
+
+    - run: |
+        az containerapp update -n ca-snakehighscoreapi-prod -g rg-snake-prod \
+          --image "ghcr.io/christianfosli/snake/highscore-api:$(git rev-parse --short $HEAD)"
