@@ -1,8 +1,7 @@
+use highscore_types::HighScoreDto;
 use reqwest::Client;
 use serde::Serialize;
 use time::OffsetDateTime;
-
-use crate::highscores::HighScore;
 
 pub struct HighScoreApi {
     base_url: String,
@@ -26,7 +25,7 @@ impl HighScoreApi {
     pub async fn top_ten(
         &self,
         since: Option<OffsetDateTime>,
-    ) -> Result<Vec<HighScore>, anyhow::Error> {
+    ) -> Result<Vec<HighScoreDto>, anyhow::Error> {
         let request_url = if let Some(since) = since {
             let query_params = serde_qs::to_string(&QueryParams { since })?;
             format!("{base}/topten?{query_params}", base = self.base_url)
@@ -45,7 +44,7 @@ impl HighScoreApi {
         Ok(res)
     }
 
-    pub async fn submit(&self, highscore: &HighScore) -> Result<(), anyhow::Error> {
+    pub async fn submit(&self, highscore: &HighScoreDto) -> Result<(), anyhow::Error> {
         self.client
             .post(&format!("{base}/submit", base = self.base_url))
             .json(highscore)

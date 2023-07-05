@@ -8,6 +8,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+highscore-types = { path = "../highscore-types" }
+
 axum = { version = "0.6" }
 mongodb = { version = "2", features = ["tracing-unstable"] }
 bson = { version = "2", features = ["time-0_3"] }

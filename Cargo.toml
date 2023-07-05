@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+  "front-end",
+  "highscore-api",
+  "highscore-types"
+]

@@ -34,8 +34,7 @@ jobs:
           tags="$tags -t ghcr.io/christianfosli/snake/highscore-api:latest"
         fi
 
-        cd highscore-api
-        docker build $tags .
+        docker build -f highscore-api/Dockerfile $tags .
       env:
         DOCKER_BUILDKIT: 1
 

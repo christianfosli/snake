@@ -10,7 +10,6 @@ use mongodb::{options::ClientOptions, Client, Database};
 use tokio::signal;
 
 mod health;
-mod models;
 mod submit;
 mod top_ten;
 

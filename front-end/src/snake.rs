@@ -54,8 +54,10 @@ impl Snake {
             .expect("snake has no tail because it has no body")
     }
 
-    pub fn apple_count(&self) -> usize {
-        self.body.len() - 1
+    pub fn apple_count(&self) -> u8 {
+        (self.body.len() - 1)
+            .try_into()
+            .expect("Snake body is too big to fit in an u8")
     }
 
     pub fn move_along(&self) -> (Snake, Option<Position>) {

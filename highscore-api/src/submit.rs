@@ -1,7 +1,6 @@
 use axum::{extract::State, http::StatusCode, Json};
+use highscore_types::{HighScoreDocument, HighScoreDto};
 use mongodb::Database;
-
-use crate::models::{HighScoreDocument, HighScoreDto};
 
 const GENERIC_DB_ERROR: &str = "An error occured trying to persist highscore to database";
 

@@ -3,7 +3,8 @@ version: '3'
 services:
   app:
     build:
-      context: ./front-end
+      context: .
+      dockerfile: front-end/Dockerfile
       args:
         BUILD_PROFILE: dev
     environment:
@@ -14,7 +15,8 @@ services:
       - api
   api:
     build:
-      context: ./highscore-api
+      context: .
+      dockerfile: highscore-api/Dockerfile
       args:
         CARGO_INSTALL_OPTIONS: --debug
     environment:

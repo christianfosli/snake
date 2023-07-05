@@ -1,4 +1,4 @@
-use mongodb::bson::DateTime;
+use bson::DateTime;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -28,5 +28,28 @@ impl HighScoreDocument {
                 timestamp: DateTime::now(),
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn it_maps_from_dto_to_doc() {
+        let dto = HighScoreDto {
+            user_name: String::from("Test user"),
+            score: 50,
+        };
+        let doc = HighScoreDocument::try_from_dto(&dto).unwrap();
+
+        assert_eq!(doc.user_name, dto.user_name);
+        assert_eq!(doc.score, dto.score);
+
+        // timestamp should be ~= now
+        assert!(
+            doc.timestamp <= DateTime::now()
+                && doc.timestamp > DateTime::from_millis(DateTime::now().timestamp_millis() - 500)
+        );
     }
 }

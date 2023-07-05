@@ -1,9 +1,10 @@
 FROM rust:1.70 AS builder
 ARG CARGO_INSTALL_OPTIONS=''
-WORKDIR /usr/src/highscore-api
+WORKDIR /usr/src
 COPY . .
+WORKDIR /usr/src/highscore-api
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-	--mount=type=cache,target=/usr/src/highscore-api/target \
+	--mount=type=cache,target=/usr/src/target \
 	cargo install ${CARGO_INSTALL_OPTIONS} --path .
 
 FROM debian:12-slim AS final

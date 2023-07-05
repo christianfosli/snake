@@ -105,7 +105,7 @@ pub fn run() -> Result<(), JsValue> {
 
 fn game_loop<F: 'static>(on_game_over: F) -> Result<(), JsValue>
 where
-    F: Fn(usize),
+    F: Fn(u8),
 {
     let snake = Snake::new();
     let status = Arc::new(RwLock::new(GameStatus::NotStarted));
@@ -224,7 +224,7 @@ quit: <q>",
     Ok(())
 }
 
-async fn game_over(highscore_api: &HighScoreApi, apple_count: usize) -> Result<(), JsValue> {
+async fn game_over(highscore_api: &HighScoreApi, apple_count: u8) -> Result<(), JsValue> {
     let doc = document();
     render::update_statusbar(&doc, GameStatus::GameOver)?;
     render::text(

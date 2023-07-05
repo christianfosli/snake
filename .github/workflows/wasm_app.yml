@@ -10,13 +10,12 @@ on:
 permissions:
   packages: write
 
-defaults:
-  run:
-    working-directory: front-end
-
 jobs:
   test:
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: front-end
     steps:
       - uses: actions/checkout@v3
 
@@ -55,6 +54,7 @@ jobs:
           docker build \
             --build-arg VERSION=$BUILD_VERSION \
             --build-arg HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL \
+            -f front-end/Dockerfile \
             -t ghcr.io/christianfosli/snake/wasm-app:$BUILD_VERSION \
             -t ghcr.io/christianfosli/snake/wasm-app:latest \
             .
@@ -86,7 +86,7 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_VICTORIOUS_ISLAND_0A8DCC303 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
-          app_location: front-end/out
+          app_location: out
           api_location: "" # leave blank or bring-your-own functions
           output_location: ""
           skip_app_build: true

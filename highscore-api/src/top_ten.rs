@@ -5,11 +5,10 @@ use axum::{
 };
 use bson::doc;
 use futures::stream::TryStreamExt;
+use highscore_types::{HighScoreDocument, HighScoreDto};
 use mongodb::{bson::DateTime, options::FindOptions, Database};
 use serde::Deserialize;
 use time::OffsetDateTime;
-
-use crate::models::{HighScoreDocument, HighScoreDto};
 
 const GENERIC_DB_ERROR: &str = "An error occured trying to fetch highscores from the database";
 
