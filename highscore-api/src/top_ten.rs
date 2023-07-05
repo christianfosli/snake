@@ -11,8 +11,7 @@ use time::OffsetDateTime;
 
 use crate::models::{HighScoreDocument, HighScoreDto};
 
-const GENERIC_DB_ERROR: &'static str =
-    "An error occured trying to fetch highscores from the database";
+const GENERIC_DB_ERROR: &str = "An error occured trying to fetch highscores from the database";
 
 #[derive(Deserialize)]
 pub struct Params {

@@ -3,7 +3,7 @@ use mongodb::Database;
 
 use crate::models::{HighScoreDocument, HighScoreDto};
 
-const GENERIC_DB_ERROR: &'static str = "An error occured trying to persist highscore to database";
+const GENERIC_DB_ERROR: &str = "An error occured trying to persist highscore to database";
 
 pub async fn submit(
     State(db): State<Database>,
