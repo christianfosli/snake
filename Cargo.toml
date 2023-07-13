@@ -3,5 +3,6 @@
 members = [
   "front-end",
   "highscore-api",
-  "highscore-types"
+  "highscore-types",
+  "highscore-cleanup-job"
 ]

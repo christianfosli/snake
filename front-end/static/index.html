@@ -1,162 +1,144 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta
-      name="description"
-      content="The snake game with vim keys. Play for free. Written in rust/web-assembly."
-    >
-    <title>snake with vim keys</title>
-    <link rel="stylesheet" type="text/css" href="style-$VERSION.css" />
-    <link rel="icon" type="image/x-icon" href="favicon.ico" />
-    <script type="module">
-      import init from "./wasm-$VERSION.js";
-      init();
-    </script>
-  </head>
 
-  <body>
-    <header>
-      <h1>snake with vim keys</h1>
-    </header>
-    <main>
-      <div id="phone" aria-label="phone">
-        <!--phone screen to be added by js-->
-        <div class="keyboard">
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'Space', key: ' '}))"
-          >
-            START
-          </button>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'Slash', key: '?'}))"
-          >
-            ?
-          </button>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyQ', key: 'q'}))"
-          >
-            STOP
-          </button>
-          <div class="break"></div>
-          <button disabled>1</button>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyK', key: 'k'}));"
-          >
-            2
-          </button>
-          <button disabled>3</button>
-          <div class="break"></div>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyH', key: 'h'}))"
-          >
-            4
-          </button>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))"
-          >
-            5
-          </button>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyL', key: 'l'}))"
-          >
-            6
-          </button>
-          <div class="break"></div>
-          <button disabled>7</button>
-          <button
-            onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))"
-          >
-            8
-          </button>
-          <button disabled>9</button>
-        </div>
-      </div>
-      <aside>
-        <h2>Top Ten All Time</h2>
-        <table id="topten-alltime">
-          <thead>
-            <tr>
-              <th>UserName</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="2">
-                <div class="loading"></div>
-                <p>Loading highscores... Please wait.</p>
-                <p class="text-muted">The back-end might be asleep 😴</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </aside>
-      <aside>
-        <h2>Top Ten This Year</h2>
-        <table id="topten-yearly">
-          <thead>
-            <tr>
-              <th>UserName</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td colspan="2">
-                <div class="loading"></div>
-                <p>Loading highscores... Please wait.</p>
-                <p class="text-muted">The back-end might be asleep 😴</p>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </aside>
-    </main>
-    <div id="privacy-policy" class="d-none data-nosnippet">
-      <h3>Privacy Policy</h3>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="The snake game with vim keys. Play for free. Written in rust/web-assembly.">
+  <title>snake with vim keys</title>
+  <link rel="stylesheet" type="text/css" href="style-$VERSION.css" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <script type="module">
+    import init from "./wasm-$VERSION.js";
+    init();
+  </script>
+</head>
 
-      <h4>What information is collected?</h4>
-      <p>
-        If you get a highscore, the provided username and your highscore is
-        collected along with a timestamp.
-      </p>
-      <p>
-        If you do not consent to having any information collected, please click
-        Cancel on the username prompt.
-      </p>
-
-      <h4>Why is this information collected?</h4>
-      <p>
-        To provide highscore functionality.
-      </p>
-
-      <h4>Who has access to this information?</h4>
-      <p>
-        The top highscores are accessible to anyone. They are shown here in the
-        Top Scores table. Other highscores are accessible only to Christian for
-        a limited time, until they are removed from the database.
-      </p>
-
-      <h4>Further Questions and Data Removal Requests</h4>
-      <p>
-        Please open up an issue on GitHub.
-      </p>
-    </div>
-    <footer>
-      <p>
-        Made by Christian Fosli with Rust/web-assembly
-        | Version $VERSION
-        | Source code on
-        <a href="https://github.com/christianfosli/snake">GitHub</a>
-        |
-        <button
-          onclick="document.getElementById('privacy-policy').classList.toggle('d-none')"
-        >
-          Privacy
+<body>
+  <header>
+    <h1>snake with vim keys</h1>
+  </header>
+  <main>
+    <div id="phone" aria-label="phone">
+      <!--phone screen to be added by js-->
+      <div class="keyboard">
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'Space', key: ' '}))">
+          START
         </button>
-      </p>
-    </footer>
-  </body>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'Slash', key: '?'}))">
+          ?
+        </button>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyQ', key: 'q'}))">
+          STOP
+        </button>
+        <div class="break"></div>
+        <button disabled>1</button>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyK', key: 'k'}));">
+          2
+        </button>
+        <button disabled>3</button>
+        <div class="break"></div>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyH', key: 'h'}))">
+          4
+        </button>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))">
+          5
+        </button>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyL', key: 'l'}))">
+          6
+        </button>
+        <div class="break"></div>
+        <button disabled>7</button>
+        <button onclick="document.dispatchEvent(new KeyboardEvent('keydown', {code: 'KeyJ', key: 'j'}))">
+          8
+        </button>
+        <button disabled>9</button>
+      </div>
+    </div>
+    <aside>
+      <h2>Top Ten All Time</h2>
+      <table id="topten-alltime">
+        <thead>
+          <tr>
+            <th>UserName</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2">
+              <div class="loading"></div>
+              <p>Loading highscores... Please wait.</p>
+              <p class="text-muted">The back-end might be asleep 😴</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </aside>
+    <aside>
+      <h2>Top Ten This Year</h2>
+      <table id="topten-yearly">
+        <thead>
+          <tr>
+            <th>UserName</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="2">
+              <div class="loading"></div>
+              <p>Loading highscores... Please wait.</p>
+              <p class="text-muted">The back-end might be asleep 😴</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </aside>
+  </main>
+  <div id="privacy-policy" class="d-none data-nosnippet">
+    <h3>Privacy Policy</h3>
+
+    <h4>What information is collected?</h4>
+    <p>
+      If you get a highscore, the provided username and your highscore is
+      collected along with a timestamp.
+    </p>
+    <p>
+      If you do not consent to having any information collected, please click
+      Cancel on the username prompt.
+    </p>
+
+    <h4>Why is this information collected?</h4>
+    <p>
+      To provide highscore functionality.
+    </p>
+
+    <h4>Who has access to this information?</h4>
+    <p>
+      The top highscores are accessible to anyone. They are shown here in the
+      Top Scores table. Other highscores are accessible only to Christian for
+      a limited time, until they are removed from the database.
+      This happens automatically on a weekly basis.
+    </p>
+
+    <h4>Further Questions and Data Removal Requests</h4>
+    <p>
+      Please open up an issue on GitHub.
+    </p>
+  </div>
+  <footer>
+    <p>
+      Made by Christian Fosli with Rust/web-assembly
+      | Version $VERSION
+      | Source code on
+      <a href="https://github.com/christianfosli/snake">GitHub</a>
+      |
+      <button onclick="document.getElementById('privacy-policy').classList.toggle('d-none')">
+        Privacy
+      </button>
+    </p>
+  </footer>
+</body>
+
 </html>

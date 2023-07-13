@@ -17,7 +17,7 @@ RUN --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=highscore-types/Cargo.toml,target=highscore-types/Cargo.toml \
     --mount=type=cache,target=/app/target/ \
     --mount=type=cache,target=/usr/local/cargo/registry/ \
-    cd highscore-api && cargo install ${CARGO_INSTALL_OPTIONS} --locked --path .
+    cd highscore-cleanup-job && cargo install ${CARGO_INSTALL_OPTIONS} --locked --path .
 
 FROM debian:12-slim AS final
 RUN apt-get update && apt-get install -y ca-certificates tzdata && rm -rf /var/lib/apt/lists/*
@@ -30,6 +30,5 @@ RUN adduser \
   --uid "${UID}" \
   appuser
 USER appuser
-COPY --from=builder /usr/local/cargo/bin/visnake-highscore-api /usr/local/bin/
-EXPOSE 3000
-CMD ["visnake-highscore-api"]
+COPY --from=builder /usr/local/cargo/bin/highscore-cleanup-job /usr/local/bin/
+CMD ["highscore-cleanup-job"]

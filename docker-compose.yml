@@ -5,8 +5,7 @@ services:
     build:
       context: .
       dockerfile: front-end/Dockerfile
-      args:
-        BUILD_PROFILE: dev
+    image: ghcr.io/christianfosli/snake/wasm-app
     environment:
       API_URL: http://api:3000
     ports:
@@ -17,14 +16,24 @@ services:
     build:
       context: .
       dockerfile: highscore-api/Dockerfile
-      args:
-        CARGO_INSTALL_OPTIONS: --debug
+    image: ghcr.io/christianfosli/snake/highscore-api
     environment:
       DB_CONNSTR: mongodb://root:secret@db
     ports:
       - '3000:3000'
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+  cleanup-job:
+    build:
+      context: .
+      dockerfile: highscore-cleanup-job/Dockerfile
+    image: ghcr.io/christianfosli/snake/highscore-cleanup-job
+    environment:
+      DB_CONNSTR: mongodb://root:secret@db
+    depends_on:
+      db:
+        condition: service_healthy
   db:
     image: mongo
     environment:
@@ -34,6 +43,8 @@ services:
       - '27017'
     volumes:
       - snake-db:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
 
 volumes:
   snake-db:

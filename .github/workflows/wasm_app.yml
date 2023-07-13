@@ -37,27 +37,48 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set variables for staging
+      - name: Prepare docker compose file(s) - PR
         if: github.event_name == 'pull_request'
         run: |
-            echo "BUILD_VERSION=pr_build_$(git rev-parse --short HEAD)" >> $GITHUB_ENV
-            echo "HIGHSCORE_API_BASE_URL=https://highscores-staging.playsnake.no" >> $GITHUB_ENV
+            printf 'Deleting docker-compose.override.yml (it is only used for development)\n'
+            rm docker-compose.override.yml
 
-      - name: Set variables for prod
+            printf 'Adding build args and tags docker-compose.yml\n'
+            COMMIT_SHA="$(git rev-parse --short HEAD)" \
+            HIGHSCORE_API_BASE_URL=https://highscores-staging.playsnake.no \
+            yq -i '
+              .services.app.build.tags[0] = strenv(COMMIT_SHA) |
+              .services.app.build.args.VERSION = strenv(COMMIT_SHA) |
+              .services.app.build.args.HIGHSCORE_API_BASE_URL= strenv(HIGHSCORE_API_BASE_URL)
+            ' docker-compose.yml
+
+            printf '\n\n'
+            yq '.services.app' docker-compose.yml
+
+      - name: Prepare docker compose file(s) - Prod
         if: github.event_name != 'pull_request'
         run: |
+            printf 'Deleting docker-compose.override.yml (it is only used for development)\n'
+            rm docker-compose.override.yml
+
+            printf 'Adding build args and tags to docker-compose.yml\n'
+            COMMIT_SHA="$(git rev-parse --short HEAD)" \
+            HIGHSCORE_API_BASE_URL=https://highscores.playsnake.no \
+            yq -i '
+              .services.app.build.tags[0] = strenv(COMMIT_SHA) |
+              .services.app.build.tags[1] = "latest" |
+              .services.app.build.args.VERSION = strenv(COMMIT_SHA) |
+              .services.app.build.args.HIGHSCORE_API_BASE_URL= strenv(HIGHSCORE_API_BASE_URL)
+            ' docker-compose.yml
+
+            printf '\n\n'
+            yq '.services.app' docker-compose.yml
+
             echo "BUILD_VERSION=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
             echo "HIGHSCORE_API_BASE_URL=https://highscores.playsnake.no" >> $GITHUB_ENV
 
       - name: Docker build
-        run: |
-          docker build \
-            --build-arg VERSION=$BUILD_VERSION \
-            --build-arg HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL \
-            -f front-end/Dockerfile \
-            -t ghcr.io/christianfosli/snake/wasm-app:$BUILD_VERSION \
-            -t ghcr.io/christianfosli/snake/wasm-app:latest \
-            .
+        run: docker compose build app
 
       - name: Login to ghcr
         if: github.event_name != 'pull_request'
@@ -76,8 +97,8 @@ jobs:
       - name: Extract files to deploy
         # Since we deploy to azure static web app rather than container we need to extract the build files to deploy
         run: |
-          container="$(docker create ghcr.io/christianfosli/snake/wasm-app:latest)"
-          docker cp "$container:/usr/share/nginx/html" out
+          docker compose create app
+          docker compose cp app:/usr/share/nginx/html out
 
       - name: Deploy
         id: builddeploy

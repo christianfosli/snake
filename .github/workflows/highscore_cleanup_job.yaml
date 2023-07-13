@@ -1,16 +1,16 @@
-name: highscore_api
+name: highscore_cleanup_job
 
 on:
   push:
     branches: [main]
     paths:
-      - highscore-api/**
-      - .github/workflows/highscore_api.yaml
+      - highscore-cleanup-job/**
+      - .github/workflows/highscore_cleanup_job.yaml
   pull_request:
     branches: [main]
     paths:
-      - highscore-api/**
-      - .github/workflows/highscore_api.yaml
+      - highscore-cleanup-job/**
+      - .github/workflows/highscore_cleanup_job.yaml
 
 permissions:
   # required for federated credentials to access azure
@@ -33,18 +33,18 @@ jobs:
 
         printf "Adding commit sha as build tag\n"
         COMMIT_SHA="$(git rev-parse --short HEAD)" yq -i \
-          '.services.api.build.tags[0] = strenv(COMMIT_SHA)' docker-compose.yml
+          '.services.cleanup-job.build.tags[0] = strenv(COMMIT_SHA)' docker-compose.yml
 
         if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           printf 'Banch is main! Adding latest as build tag\n'
-          yq -i '.services.api.build.tags[1] = "latest"' docker-compose.yml
+          yq -i '.services.cleanup-job.build.tags[1] = "latest"' docker-compose.yml
         fi
 
         printf '\n\n'
-        yq '.services.api' docker-compose.yml
+        yq '.services.cleanup-job' docker-compose.yml
 
     - name: Build with docker compose
-      run: docker compose build api
+      run: docker compose build cleanup-job
       env:
         DOCKER_BUILDKIT: 1
 
@@ -56,7 +56,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Push
-      run: docker push --all-tags ghcr.io/christianfosli/snake/highscore-api
+      run: docker push --all-tags ghcr.io/christianfosli/snake/highscore-cleanup-job
 
   deploy_staging:
     needs: build
@@ -73,8 +73,8 @@ jobs:
     - run: az extension add -n containerapp
 
     - run: |
-        az containerapp update -n ca-snakehighscoreapi-staging -g rg-snake-staging \
-          --image "ghcr.io/christianfosli/snake/highscore-api:$(git rev-parse --short $HEAD)"
+        az containerapp job update -n caj-snakehighscoreclean-staging -g rg-snake-staging \
+          --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:$(git rev-parse --short $HEAD)"
 
   deploy_prod:
     if: github.event_name != 'pull_request'
@@ -92,5 +92,5 @@ jobs:
     - run: az extension add -n containerapp
 
     - run: |
-        az containerapp update -n ca-snakehighscoreapi-prod -g rg-snake-prod \
-          --image "ghcr.io/christianfosli/snake/highscore-api:$(git rev-parse --short $HEAD)"
+        az containerapp job update -n caj-snakehighscoreclean-prod -g rg-snake-prod \
+          --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:$(git rev-parse --short $HEAD)"

@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 bson = "2.6.1"
 serde = "1.0.166"
+
+[features]
+# Using feature flag because as per July 2023 a data migration is needed to deserialize
+# data stored by earlier (.NET-based) highscore-api implementation
+expose_id = []

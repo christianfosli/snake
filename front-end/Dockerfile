@@ -16,6 +16,8 @@ RUN --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
     --mount=type=bind,source=front-end/Cargo.toml,target=front-end/Cargo.toml \
     --mount=type=bind,source=highscore-api/src,target=highscore-api/src \
     --mount=type=bind,source=highscore-api/Cargo.toml,target=highscore-api/Cargo.toml \
+    --mount=type=bind,source=highscore-cleanup-job/src,target=highscore-cleanup-job/src \
+    --mount=type=bind,source=highscore-cleanup-job/Cargo.toml,target=highscore-cleanup-job/Cargo.toml \
     --mount=type=bind,source=highscore-types/src,target=highscore-types/src \
     --mount=type=bind,source=highscore-types/Cargo.toml,target=highscore-types/Cargo.toml \
     --mount=type=cache,target=/app/target/ \

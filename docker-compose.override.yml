@@ -1,0 +1,14 @@
+services:
+  app:
+    build:
+      args:
+        BUILD_PROFILE: dev
+  api:
+    build:
+      args:
+        CARGO_INSTALL_OPTIONS: --debug
+  cleanup-job:
+    build:
+      args:
+        CARGO_INSTALL_OPTIONS: --debug
+

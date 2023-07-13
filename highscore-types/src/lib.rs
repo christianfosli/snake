@@ -1,3 +1,4 @@
+use bson::oid::ObjectId;
 use bson::DateTime;
 use serde::{Deserialize, Serialize};
 
@@ -10,6 +11,10 @@ pub struct HighScoreDto {
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct HighScoreDocument {
+    #[cfg(feature = "expose_id")]
+    #[serde(rename = "_id", skip_serializing_if = "Option::is_none")]
+    pub id: Option<ObjectId>,
+
     pub user_name: String,
     pub score: u8,
     pub timestamp: DateTime,
@@ -18,6 +23,21 @@ pub struct HighScoreDocument {
 impl HighScoreDocument {
     const MAX_SCORE: u8 = 144;
 
+    #[cfg(feature = "expose_id")]
+    pub fn try_from_dto(dto: &HighScoreDto) -> Result<Self, String> {
+        if dto.score > Self::MAX_SCORE {
+            Err(format!("Invalid score {}: too high", dto.score))
+        } else {
+            Ok(HighScoreDocument {
+                id: None,
+                user_name: dto.user_name.clone(),
+                score: dto.score,
+                timestamp: DateTime::now(),
+            })
+        }
+    }
+
+    #[cfg(not(feature = "expose_id"))]
     pub fn try_from_dto(dto: &HighScoreDto) -> Result<Self, String> {
         if dto.score > Self::MAX_SCORE {
             Err(format!("Invalid score {}: too high", dto.score))

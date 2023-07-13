@@ -3,8 +3,9 @@
 Snake with optional vim navigation.
 Visit [playsnake.no](https://www.playsnake.no) to play!
 
-![wasm\_app](https://github.com/christianfosli/visnake-wasm/workflows/wasm_app/badge.svg)
-![highscore\_api](https://github.com/christianfosli/visnake-wasm/workflows/highscore_api/badge.svg)
+![wasm\_app](https://github.com/christianfosli/snake/workflows/wasm_app/badge.svg)
+![highscore\_api](https://github.com/christianfosli/snake/workflows/highscore_api/badge.svg)
+![highscore\_cleanup\_job](https://github.com/christianfosli/snake/workflows/highscore_cleanup_job/badge.svg)
 ![terraform](https://github.com/christianfosli/snake/actions/workflows/terraform.yml/badge.svg)
 
 ## Architecture 🏗
