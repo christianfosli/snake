@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-highscore-types = { path = "../highscore-types", features = ["expose_id"] }
+highscore-types = { path = "../highscore-types" }
 
 mongodb = { version = "2", features = ["tracing-unstable"] }
 bson = { version = "2", features = ["time-0_3"] }

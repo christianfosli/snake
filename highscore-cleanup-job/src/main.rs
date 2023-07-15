@@ -1,6 +1,6 @@
 use std::{collections::HashSet, env, error::Error};
 
-use bson::{doc, oid::ObjectId, DateTime};
+use bson::{doc, DateTime};
 use futures::TryStreamExt;
 use highscore_types::HighScoreDocument;
 use init_tracing_opentelemetry::tracing_subscriber_ext;
@@ -53,7 +53,9 @@ async fn do_cleanup(db: &Database) -> Result<(), Box<dyn Error>> {
         .copied()
         .collect::<Vec<_>>();
 
-    if !to_delete.is_empty() {
+    if to_delete.is_empty() {
+        tracing::info!("Nothing to delete");
+    } else {
         tracing::info!(?to_delete, "Ready to delete highscores");
 
         let res = collection
@@ -64,8 +66,6 @@ async fn do_cleanup(db: &Database) -> Result<(), Box<dyn Error>> {
             deleted_count = res.deleted_count,
             "Successfully deleted no-longer-needed highscores"
         );
-    } else {
-        tracing::info!("Nothing to delete");
     }
 
     Ok(())
