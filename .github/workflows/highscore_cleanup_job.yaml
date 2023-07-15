@@ -74,7 +74,7 @@ jobs:
 
     - run: |
         az containerapp job update -n caj-snakehighscoreclean-staging -g rg-snake-staging \
-          --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:$(git rev-parse --short $HEAD)"
+          --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:$(git rev-parse --short HEAD)"
 
   deploy_prod:
     if: github.event_name != 'pull_request'
@@ -93,4 +93,4 @@ jobs:
 
     - run: |
         az containerapp job update -n caj-snakehighscoreclean-prod -g rg-snake-prod \
-          --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:$(git rev-parse --short $HEAD)"
+          --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:$(git rev-parse --short HEAD)"
