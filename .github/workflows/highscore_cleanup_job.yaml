@@ -33,11 +33,11 @@ jobs:
 
         printf "Adding commit sha as build tag\n"
         COMMIT_SHA="$(git rev-parse --short HEAD)" yq -i \
-          '.services.cleanup-job.build.tags[0] = strenv(COMMIT_SHA)' docker-compose.yml
+          '.services.cleanup-job.build.tags[0] = "ghcr.io/christianfosli/snake/highscore-cleanup-job:" + strenv(COMMIT_SHA)' docker-compose.yml
 
         if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
           printf 'Banch is main! Adding latest as build tag\n'
-          yq -i '.services.cleanup-job.build.tags[1] = "latest"' docker-compose.yml
+          yq -i '.services.cleanup-job.build.tags[1] = "ghcr.io/christianfosli/snake/highscore-cleanup-job:latest"' docker-compose.yml
         fi
 
         printf '\n\n'

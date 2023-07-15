@@ -44,10 +44,11 @@ jobs:
             rm docker-compose.override.yml
 
             printf 'Adding build args and tags docker-compose.yml\n'
+            IMAGE=ghcr.io/christianfosli/snake/wasm-app \
             COMMIT_SHA="$(git rev-parse --short HEAD)" \
             HIGHSCORE_API_BASE_URL=https://highscores-staging.playsnake.no \
             yq -i '
-              .services.app.build.tags[0] = strenv(COMMIT_SHA) |
+              .services.app.build.tags[0] = strenv(IMAGE) + ":" + strenv(COMMIT_SHA) |
               .services.app.build.args.VERSION = strenv(COMMIT_SHA) |
               .services.app.build.args.HIGHSCORE_API_BASE_URL= strenv(HIGHSCORE_API_BASE_URL)
             ' docker-compose.yml
@@ -62,11 +63,12 @@ jobs:
             rm docker-compose.override.yml
 
             printf 'Adding build args and tags to docker-compose.yml\n'
+            IMAGE=ghcr.io/christianfosli/snake/wasm-app \
             COMMIT_SHA="$(git rev-parse --short HEAD)" \
             HIGHSCORE_API_BASE_URL=https://highscores.playsnake.no \
             yq -i '
-              .services.app.build.tags[0] = strenv(COMMIT_SHA) |
-              .services.app.build.tags[1] = "latest" |
+              .services.app.build.tags[0] = strenv(IMAGE) + ":" + strenv(COMMIT_SHA) |
+              .services.app.build.tags[1] = strenv(IMAGE) + ":latest" |
               .services.app.build.args.VERSION = strenv(COMMIT_SHA) |
               .services.app.build.args.HIGHSCORE_API_BASE_URL= strenv(HIGHSCORE_API_BASE_URL)
             ' docker-compose.yml
