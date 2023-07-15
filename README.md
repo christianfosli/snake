@@ -13,7 +13,8 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 ```mermaid
 graph TD
     A(<b>Front-end</b><br/>Snake implemented in rust/wasm<br/>Deployed as Azure static webapp<br/>https://www.playsnake.no)-->B
-    B(<b>Highscore API</b><br/>Rust-based Azure Container App<br/>https://highscores.playsnake.no)-->C(Mongo DB Database)
+    B(<b>Highscore API</b><br/>REST API to manage highscores<br/>Deployed as Azure Container App<br/>https://highscores.playsnake.no)-->C(Mongo DB Database)
+    D(<b>Highscore Cleanup Job</b><br/>Periodically deletes stale highscores<br/>Deployed as Azure Container App Job)-->C
 ```
 
 All the cloud infra is Infrastructure-as-Code managed by Terraform.
@@ -46,3 +47,18 @@ docker compose down
 
 [docker](https://www.docker.com/) and [compose](https://github.com/docker/compose)
 (incuded in Docker Desktop)
+
+## Monitoring
+
+### Application Insights
+
+Query the `ContainerAppConsoleLogs_CL` and `ContainerAppSystemLogs_CL` tables
+to find pod logs and system logs.
+
+### Open Telemetry
+
+The backend service(s) are set up to collect logs using Open Telemetry.
+Currently (July, 2023) the open telemetry data is not exported anywhere,
+so it is hard to visualize this data. It is printed to the console (see above for finding console logs in application insights). 
+//TODO: Make this work smoothly :smile:
+
