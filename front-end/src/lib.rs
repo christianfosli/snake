@@ -50,14 +50,15 @@ pub fn run() -> Result<(), JsValue> {
 
     let fallback_url = || {
         log::debug!("Using current base url + /api as fallback url");
-        window()
-            .location()
-            .origin()
-            .map(|url| format!("{url}/api"))
-            .unwrap_or_else(|_| {
-                log::warn!("Unable to determine current base url. Trying with a relative one. This probably won't work.");
+        window().location().origin().map_or_else(
+            |e| {
+                log::warn!(
+                    "Unable to determine current base url ({e:?}). Trying with a relative one."
+                );
                 String::from("/api")
-            })
+            },
+            |url| format!("{url}/api"),
+        )
     };
 
     let highscore_url = match option_env!("HIGHSCORE_API_BASE_URL") {
@@ -166,14 +167,11 @@ quit: <q>",
                             log::error!("Failed to write on canvas due to {e:?}");
                         });
                     }
-                    Command::Move(d)
-                        if snake.read().unwrap().apple_count() == 0
-                            || d != snake.read().unwrap().direction.turn_180_degrees() =>
-                    {
-                        *dir.write().unwrap() = d;
-                    }
-                    fallback => {
-                        log::debug!("Ignored command {fallback:?}");
+                    Command::Move(d) => {
+                        let snake = snake.read().unwrap();
+                        if snake.apple_count() == 0 || d != snake.direction.turn_180_degrees() {
+                            *dir.write().unwrap() = d;
+                        }
                     }
                 }
             }
@@ -193,10 +191,13 @@ quit: <q>",
             return;
         }
 
-        let mut snake = snake.write().unwrap();
-        snake.direction = *dir.read().unwrap();
-        let (moved_snake, old_tail) = snake.move_along();
-        *snake = moved_snake;
+        let mut snake_mut = snake.write().unwrap();
+        snake_mut.direction = *dir.read().unwrap();
+        let (moved_snake, old_tail) = snake_mut.move_along();
+        *snake_mut = moved_snake;
+        drop(snake_mut);
+
+        let snake = snake.read().unwrap();
 
         if !snake.alive {
             *status.write().unwrap() = GameStatus::GameOver;
