@@ -1,4 +1,4 @@
-FROM rust:1.70 AS builder
+FROM rust:1.71 AS builder
 ARG CARGO_INSTALL_OPTIONS=''
 WORKDIR /app
 # Build the service
