@@ -1,0 +1,13 @@
+{
+  "name": "visnake-e2e",
+  "version": "1.0.0",
+  "description": "End to end tests for visnake",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.36.2"
+  }
+}

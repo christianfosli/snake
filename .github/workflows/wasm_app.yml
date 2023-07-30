@@ -32,6 +32,7 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-22.04
     name: Build and Deploy
+    environment: "${{ github.event_name == 'push' && 'prod' || 'staging' }}"
     env:
       DOCKER_BUILDKIT: "1"
     steps:

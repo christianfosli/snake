@@ -7,6 +7,7 @@ Visit [playsnake.no](https://www.playsnake.no) to play!
 ![highscore\_api](https://github.com/christianfosli/snake/workflows/highscore_api/badge.svg)
 ![highscore\_cleanup\_job](https://github.com/christianfosli/snake/workflows/highscore_cleanup_job/badge.svg)
 ![terraform](https://github.com/christianfosli/snake/actions/workflows/terraform.yml/badge.svg)
+![test_e2e](https://github.com/christianfosli/snake/actions/workflows/test_e2e.yaml/badge.svg)
 
 ## Architecture 🏗
 
