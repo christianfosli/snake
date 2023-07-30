@@ -2,6 +2,7 @@ name: test_e2e
 
 on:
   deployment:
+    environment: prod
   push:
     paths:
       - e2e/**
