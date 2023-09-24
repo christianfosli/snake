@@ -4,7 +4,7 @@ use axum::{
     routing::{get, post},
     Router, Server,
 };
-use axum_tracing_opentelemetry::opentelemetry_tracing_layer;
+use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use init_tracing_opentelemetry::tracing_subscriber_ext;
 use mongodb::{options::ClientOptions, Client, Database};
 use tokio::signal;
@@ -24,7 +24,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/submit", post(submit::submit))
         .route("/readyz", get(health::ready))
         .route("/livez", get(health::live))
-        .layer(opentelemetry_tracing_layer())
+        .layer(OtelInResponseLayer::default())
+        .layer(OtelAxumLayer::default())
         .with_state(db);
 
     let addr = env::var("LISTEN_ADDR")
