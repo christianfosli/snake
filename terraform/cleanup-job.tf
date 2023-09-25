@@ -15,7 +15,7 @@ resource "null_resource" "createCleanupJob" {
     az containerapp job create -n "caj-snakehighscoreclean-${var.ENVIRONMENT}" \
       -g "${azurerm_container_app_environment.containerAppEnv.resource_group_name}" \
       --environment "${azurerm_container_app_environment.containerAppEnv.name}" \
-      --trigger-type "Schedule" --cron-expression "@weekly" \
+      --trigger-type "Schedule" --cron-expression "0 7 * * 0" \
       --replica-timeout 600 --replica-retry-limit 1 --replica-completion-count 1 --parallelism 1 \
       --image "ghcr.io/christianfosli/snake/highscore-cleanup-job:latest" \
       --cpu "0.25" --memory "0.5Gi" \
