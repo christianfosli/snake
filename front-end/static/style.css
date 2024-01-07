@@ -5,7 +5,8 @@ body {
   background-color: lightslategray;
 }
 
-h1, h2 {
+h1,
+h2 {
   color: white;
 }
 
@@ -70,7 +71,9 @@ footer p {
   flex-wrap: wrap;
 }
 
-.keyboard button:first-child, .keyboard button:nth-child(2), .keyboard button:nth-child(3) {
+.keyboard button:first-child,
+.keyboard button:nth-child(2),
+.keyboard button:nth-child(3) {
   height: 2rem;
   margin: 0.8rem;
   font-size: 0.8rem;
@@ -146,8 +149,13 @@ td {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Privacy Policy */
