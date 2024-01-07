@@ -42,6 +42,16 @@ footer p {
   opacity: 0.5;
 }
 
+.alert {
+  background-color: #ff0000;
+  color: #ffffff;
+  padding: 0.5rem;
+}
+
+.alert h3 {
+  display: inline-block;
+}
+
 /* Phone and Canvas */
 
 #phone {
