@@ -5,7 +5,7 @@ data "azurerm_resource_group" "rg" {
 }
 
 data "azurerm_storage_account" "st" {
-  name                = "stsnake${var.ENVIRONMENT}"
+  name                = "stsnake${var.ENVIRONMENT}2"
   resource_group_name = data.azurerm_resource_group.rg.name
 }
 

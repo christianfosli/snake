@@ -1,7 +1,7 @@
 terraform {
   backend "azurerm" {
     resource_group_name  = "rg-snake-staging"
-    storage_account_name = "stsnakestaging"
+    storage_account_name = "stsnakestaging2"
     container_name       = "tfstate"
     key                  = "staging.terraform.tfstate"
     use_oidc             = true

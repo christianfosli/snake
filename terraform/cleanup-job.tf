@@ -23,6 +23,8 @@ resource "null_resource" "createCleanupJob" {
       --env-vars "DB_CONNSTR=secretref:db-connstr"
     EOF
 
+    interpreter = ["/bin/bash", "-c"]
+
     # nonsensitive used on sensitive value to prevent all stdout from being hidden
   }
 }

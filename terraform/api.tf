@@ -43,7 +43,8 @@ resource "azurerm_container_app" "highscoreApi" {
     target_port      = 3000
 
     traffic_weight {
-      percentage = 100
+      percentage      = 100
+      latest_revision = true
     }
 
     # traffic weight will be adjusted during CI/CD as new revisions are published

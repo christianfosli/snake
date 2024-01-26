@@ -83,7 +83,7 @@ jobs:
           terraform -v
           terraform init --input=false \
             -backend-config="resource_group_name=rg-snake-${{ env.TF_VAR_ENVIRONMENT }}" \
-            -backend-config="storage_account_name=stsnake${{ env.TF_VAR_ENVIRONMENT }}" \
+            -backend-config="storage_account_name=stsnake${{ env.TF_VAR_ENVIRONMENT }}2" \
             -backend-config="key=${{ env.TF_VAR_ENVIRONMENT }}.terraform.tfstate"
 
       - name: Validate
