@@ -67,9 +67,9 @@ jobs:
 
     - uses: azure/login@v1
       with:
-        client-id: ${{ secrets.ARM_CLIENT_ID }}
-        subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        tenant-id: ${{ secrets.ARM_TENANT_ID }}
+        client-id: ${{ vars.AZ_CLIENT_ID }}
+        subscription-id: ${{ vars.AZ_SUBSCRIPTION_ID }}
+        tenant-id: ${{ vars.AZ_TENANT_ID }}
 
     - run: az extension add -n containerapp
 
@@ -87,9 +87,9 @@ jobs:
 
     - uses: azure/login@v1
       with:
-        client-id: ${{ secrets.ARM_CLIENT_ID }}
-        subscription-id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-        tenant-id: ${{ secrets.ARM_TENANT_ID }}
+        client-id: ${{ vars.AZ_CLIENT_ID }}
+        subscription-id: ${{ vars.AZ_SUBSCRIPTION_ID }}
+        tenant-id: ${{ vars.AZ_TENANT_ID }}
 
     - run: az extension add -n containerapp
 
