@@ -11,7 +11,13 @@ resource "azurerm_static_site" "app" {
   tags                = local.common_tags
 }
 
+resource "azurerm_static_site_custom_domain" "app" {
+  count = var.ENVIRONMENT == "prod" ? 1 : 0
+
+  static_site_id  = azurerm_static_site.app[0].id
+  domain_name     = "${azurerm_dns_cname_record.app[0].name}.${azurerm_dns_cname_record.app[0].zone_name}"
+  validation_type = "cname-delegation"
+}
+
 # Manual Steps
-# - Associate with GitHub target repository
-# - Add custom domain (May be added to terraform soon)
-#   -> see https://github.com/terraform-providers/terraform-provider-azurerm/issues/11971
+# - Associate with GitHub target repository / add deployment token in GitHub secrets
