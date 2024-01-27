@@ -17,7 +17,7 @@ jobs:
       run:
         working-directory: front-end
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install
         run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
@@ -36,7 +36,7 @@ jobs:
     env:
       DOCKER_BUILDKIT: "1"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Prepare docker compose file(s) - PR
         if: github.event_name == 'pull_request'
@@ -85,7 +85,7 @@ jobs:
 
       - name: Login to ghcr
         if: github.event_name != 'pull_request'
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
