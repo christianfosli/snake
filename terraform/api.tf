@@ -57,13 +57,21 @@ resource "azurerm_container_app" "highscoreApi" {
     # because it is currently (July, 2023) not supported by azurerm terraform provider
   }
 
+  identity {
+    type = "SystemAssigned"
+    # Manaul step: Grant this Identity permissions to access the key vault
+  }
+
   secret {
     name  = "db-connstr"
     value = azurerm_key_vault_secret.mongoConnectionString.value
+    # Issue: Doesn't auto-update and if it does then the secret ends up in tf state
+    # Solution: Update to be a key vault reference in azure portal, ignore changes here.
+    # See upstream issue: https://github.com/hashicorp/terraform-provider-azurerm/issues/21739
   }
 
   lifecycle {
-    ignore_changes = [template[0].container[0].image, ingress[0]]
+    ignore_changes = [template[0].container[0].image, ingress[0], secret]
   }
 
   tags = local.common_tags
