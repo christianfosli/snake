@@ -2,12 +2,12 @@ use std::{env, error::Error, net::SocketAddr};
 
 use axum::{
     routing::{get, post},
-    Router, Server,
+    Router,
 };
 use axum_tracing_opentelemetry::middleware::{OtelAxumLayer, OtelInResponseLayer};
 use init_tracing_opentelemetry::tracing_subscriber_ext;
 use mongodb::{options::ClientOptions, Client, Database};
-use tokio::signal;
+use tokio::net::TcpListener;
 
 mod health;
 mod submit;
@@ -34,19 +34,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     tracing::info!(?addr, "Service started successfully");
 
-    Server::bind(&addr)
-        .serve(app.into_make_service())
-        .with_graceful_shutdown(async {
-            signal::unix::signal(signal::unix::SignalKind::terminate())
-                .expect("Failed to listen for SIGTERM")
-                .recv()
-                .await;
-
-            tracing::info!("SIGTERM received. Starting graceful shutdown");
-
-            opentelemetry::global::shutdown_tracer_provider();
-        })
-        .await?;
+    let listener = TcpListener::bind(&addr).await?;
+    axum::serve(listener, app.into_make_service()).await?;
 
     Ok(())
 }
