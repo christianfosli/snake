@@ -9,9 +9,10 @@ WORKDIR /app
 # Build the app
 # - Uses bind mounts so that it is not needed to copy the source code into the container
 #   (note that due to using a Cargo workspace the source files for all members members are needed)
+#   (note 2: Had to add ,readwrite to Cargo.lock due to Read-only FS error during wasm-pack build, sounds strange...)
 # - Uses cache mounts to speed up subsequent builds
 RUN --mount=type=bind,source=Cargo.toml,target=Cargo.toml \
-    --mount=type=bind,source=Cargo.lock,target=Cargo.lock \
+    --mount=type=bind,source=Cargo.lock,target=Cargo.lock,readwrite \
     --mount=type=bind,source=front-end/src,target=front-end/src \
     --mount=type=bind,source=front-end/Cargo.toml,target=front-end/Cargo.toml \
     --mount=type=bind,source=highscore-api/src,target=highscore-api/src \
