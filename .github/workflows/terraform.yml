@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   staging:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     environment: staging
     env:
       ARM_CLIENT_ID: ${{ vars.AZ_CLIENT_ID }}
@@ -32,6 +32,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Azure login
         uses: azure/login@v1
@@ -57,7 +59,7 @@ jobs:
   prod:
     if: github.event_name != 'pull_request'
     needs: staging
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     environment: prod
     env:
       ARM_CLIENT_ID: ${{ vars.AZ_CLIENT_ID }}
@@ -70,6 +72,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
 
       - name: Azure login
         uses: azure/login@v1

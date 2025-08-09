@@ -4,10 +4,7 @@ use bson::{doc, DateTime};
 use futures::TryStreamExt;
 use highscore_types::HighScoreDocument;
 use init_tracing_opentelemetry::tracing_subscriber_ext;
-use mongodb::{
-    options::{ClientOptions, FindOptions},
-    Client, Database,
-};
+use mongodb::{options::ClientOptions, Client, Database};
 use time::OffsetDateTime;
 
 const TO_KEEP_COUNT: u8 = 15;
@@ -15,13 +12,10 @@ const TO_KEEP_COUNT: u8 = 15;
 async fn do_cleanup(db: &Database) -> Result<(), Box<dyn Error>> {
     let collection = db.collection::<HighScoreDocument>("highscore");
 
-    let find_opts = FindOptions::builder()
-        .sort(doc! { "score": -1})
-        .skip(Some(u64::from(TO_KEEP_COUNT)))
-        .build();
-
     let ok_to_delete_all_time = collection
-        .find(None, find_opts.clone())
+        .find(doc! {})
+        .sort(doc! { "score": -1})
+        .skip(u64::from(TO_KEEP_COUNT))
         .await?
         .try_collect::<Vec<_>>()
         .await?;
@@ -38,7 +32,9 @@ async fn do_cleanup(db: &Database) -> Result<(), Box<dyn Error>> {
         .build()?;
 
     let ok_to_delete_this_year = collection
-        .find(doc! { "timestamp": {"$gte": start_of_this_year}}, find_opts)
+        .find(doc! { "timestamp": {"$gte": start_of_this_year}})
+        .sort(doc! { "score": -1})
+        .skip(u64::from(TO_KEEP_COUNT))
         .await?
         .try_collect::<Vec<_>>()
         .await?;
@@ -59,7 +55,7 @@ async fn do_cleanup(db: &Database) -> Result<(), Box<dyn Error>> {
         tracing::info!(?to_delete, "Ready to delete highscores");
 
         let res = collection
-            .delete_many(doc! { "_id": {"$in": to_delete}}, None)
+            .delete_many(doc! { "_id": {"$in": to_delete}})
             .await?;
 
         tracing::info!(
@@ -73,7 +69,7 @@ async fn do_cleanup(db: &Database) -> Result<(), Box<dyn Error>> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber_ext::init_subscribers()?;
+    let _guard = tracing_subscriber_ext::init_subscribers()?;
 
     let db = get_db_handle().await?;
 

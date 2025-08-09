@@ -46,7 +46,7 @@ impl HighScoreApi {
 
     pub async fn submit(&self, highscore: &HighScoreDto) -> Result<(), anyhow::Error> {
         self.client
-            .post(&format!("{base}/submit", base = self.base_url))
+            .post(format!("{base}/submit", base = self.base_url))
             .json(highscore)
             .send()
             .await?

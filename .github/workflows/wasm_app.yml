@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: front-end
@@ -27,10 +27,12 @@ jobs:
 
       - name: Wasm test
         run: wasm-pack test --headless --chrome
+        env:
+          RUSTFLAGS: "--cfg getrandom_backend=\"wasm_js\""
 
   build_and_deploy:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Build and Deploy
     environment: "${{ github.event_name == 'push' && 'prod' || 'staging' }}"
     env:
@@ -117,7 +119,7 @@ jobs:
 
   close_pull_request:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     name: Close Pull Request
     steps:
       - name: Close Pull Request

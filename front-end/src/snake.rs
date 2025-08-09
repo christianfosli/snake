@@ -200,7 +200,7 @@ mod tests {
 
         assert!(snake.dying());
         let (snake, _) = snake.move_along();
-        assert_eq!(false, snake.alive);
+        assert!(!snake.alive);
     }
 
     #[test]
@@ -219,7 +219,7 @@ mod tests {
 
         assert!(snake.dying());
         let (snake, _) = snake.move_along();
-        assert_eq!(false, snake.alive)
+        assert!(!snake.alive)
     }
 
     #[test]
@@ -231,12 +231,12 @@ mod tests {
                 Position { x: 25.0, y: 25.0 },
                 Position { x: 0.0, y: 25.0 },
             ],
-            target: Position::random_except(&vec![Position { x: 0.0, y: 0.0 }]),
+            target: Position::random_except(&[Position { x: 0.0, y: 0.0 }]),
             direction: Direction::Up,
             ..Snake::new()
         };
 
-        assert_eq!(false, snake.dying());
+        assert!(!snake.dying());
         let (snake, _) = snake.move_along();
         assert!(snake.alive)
     }
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn it_dies_when_killed() {
         let snake = Snake::new();
-        assert_eq!(false, snake.kill().alive);
+        assert!(!snake.kill().alive);
     }
 
     #[test]
@@ -292,19 +292,17 @@ mod tests {
 
     #[test]
     fn position_is_inside_walls_should_be_false() {
-        assert_eq!(false, Position { x: -25.0, y: 0.0 }.is_inside_walls());
-        assert_eq!(
-            false,
-            Position {
+        assert!(!Position { x: -25.0, y: 0.0 }.is_inside_walls());
+        assert!(
+            !Position {
                 x: WIDTH as f64,
                 y: 0.0
             }
             .is_inside_walls()
         );
-        assert_eq!(false, Position { x: 0.0, y: -25.0 }.is_inside_walls());
-        assert_eq!(
-            false,
-            Position {
+        assert!(!Position { x: 0.0, y: -25.0 }.is_inside_walls());
+        assert!(
+            !Position {
                 x: 0.0,
                 y: HEIGHT as f64,
             }

@@ -15,7 +15,7 @@ pub async fn submit(
         (StatusCode::UNPROCESSABLE_ENTITY, e)
     })?;
 
-    collection.insert_one(doc, None).await.map_err(|e| {
+    collection.insert_one(doc).await.map_err(|e| {
         tracing::error!(?e, "Failed to persist highscore to database");
         (
             StatusCode::INTERNAL_SERVER_ERROR,

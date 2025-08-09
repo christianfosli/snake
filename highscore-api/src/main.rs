@@ -15,7 +15,7 @@ mod top_ten;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber_ext::init_subscribers()?;
+    let _guard = tracing_subscriber_ext::init_subscribers()?;
 
     let db = get_db_handle().await?;
 
@@ -24,7 +24,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .route("/submit", post(submit::submit))
         .route("/readyz", get(health::ready))
         .route("/livez", get(health::live))
-        .layer(OtelInResponseLayer::default())
+        .layer(OtelInResponseLayer)
         .layer(OtelAxumLayer::default())
         .with_state(db);
 

@@ -32,17 +32,16 @@ pub fn new_canvas(doc: &Document, parent: &HtmlElement) -> Result<(), JsValue> {
 
 pub fn snake(doc: &Document, snake: &Snake) -> Result<(), JsValue> {
     let context = get_canvas_context(doc)?;
-    context.set_fill_style(&JsValue::from_str("#abba00"));
+    context.set_fill_style_str("#abba00");
     context.fill_rect(
         snake.head().x,
         snake.head().y,
         snake::LINE_THICKNESS,
         snake::LINE_THICKNESS,
     );
-    snake.body.iter().rev().nth(1).map(|next| {
-        context.set_fill_style(&JsValue::from_str("#bada55"));
+    snake.body.iter().rev().nth(1).inspect(|next| {
+        context.set_fill_style_str("#bada55");
         context.fill_rect(next.x, next.y, snake::LINE_THICKNESS, snake::LINE_THICKNESS);
-        next
     });
     Ok(())
 }
@@ -53,7 +52,7 @@ pub fn apple(doc: &Document, apple: &Position) -> Result<(), JsValue> {
     let x = (apple.x + snake::LINE_THICKNESS / 2.0).round();
     let y = (apple.y + snake::LINE_THICKNESS / 2.0).round();
 
-    context.set_fill_style(&JsValue::from_str("red"));
+    context.set_fill_style_str("red");
     context.begin_path();
     context.ellipse(x, y, radius, radius, PI / 4.0, 0.0, 2.0 * PI)?;
     context.fill();
@@ -83,7 +82,7 @@ pub fn text(doc: &Document, txt: &str, row: u8) -> Result<(), JsValue> {
 
     let context = get_canvas_context(doc)?;
     context.set_font("30px monospace");
-    context.set_fill_style(&"blue".into());
+    context.set_fill_style_str("blue");
     context.fill_text(txt, 10.0, f64::from(row) * snake::LINE_THICKNESS)?;
     Ok(())
 }

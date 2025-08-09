@@ -1,9 +1,10 @@
-FROM rust:1.72 AS builder
+FROM rust:1.89 AS builder
 # Pass a unique VERSION as build arg to bust browser cache
 ARG VERSION=latest 
 ARG BUILD_PROFILE=release
 ARG HIGHSCORE_API_BASE_URL=""
 ENV HIGHSCORE_API_BASE_URL=$HIGHSCORE_API_BASE_URL
+ENV RUSTFLAGS="--cfg getrandom_backend=\"wasm_js\""
 RUN curl --fail https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 WORKDIR /app
 # Build the app

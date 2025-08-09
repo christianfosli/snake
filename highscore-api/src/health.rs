@@ -3,7 +3,7 @@ use bson::doc;
 use mongodb::Database;
 
 pub async fn ready(State(db): State<Database>) -> impl IntoResponse {
-    match db.run_command(doc! { "ping": 1}, None).await {
+    match db.run_command(doc! { "ping": 1}).await {
         Ok(_) => (StatusCode::OK, "Ready"),
         Err(e) => {
             tracing::error!(?e, "Readiness check failed due to database ping failed");

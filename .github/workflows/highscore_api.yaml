@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -60,7 +60,7 @@ jobs:
 
   deploy_staging:
     needs: build
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     environment: staging
     steps:
     - uses: actions/checkout@v4
@@ -80,7 +80,7 @@ jobs:
   deploy_prod:
     if: github.event_name != 'pull_request'
     needs: deploy_staging
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     environment: prod
     steps:
     - uses: actions/checkout@v4

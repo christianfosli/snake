@@ -106,8 +106,7 @@ mod tests {
 
         assert!(highscore
             .to_table_row()
-            .find(&highscore.user_name)
-            .is_some());
+            .contains(&highscore.user_name));
     }
 
     #[test]
@@ -119,7 +118,6 @@ mod tests {
 
         assert!(highscore
             .to_table_row()
-            .find(&highscore.score.to_string())
-            .is_some())
+            .contains(&highscore.score.to_string()))
     }
 }

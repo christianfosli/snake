@@ -6,7 +6,7 @@ use axum::{
 use bson::doc;
 use futures::stream::TryStreamExt;
 use highscore_types::{HighScoreDocument, HighScoreDto};
-use mongodb::{bson::DateTime, options::FindOptions, Database};
+use mongodb::{bson::DateTime, Database};
 use serde::Deserialize;
 use time::OffsetDateTime;
 
@@ -25,17 +25,15 @@ pub async fn handle_top_ten(
     let filter = params
         .since
         .map(DateTime::from_time_0_3)
-        .map(|since| doc! { "timestamp": {"$gte": since}});
-
-    let find_opts = FindOptions::builder()
-        .sort(doc! { "score": -1 })
-        .limit(10)
-        .build();
+        .map(|since| doc! { "timestamp": {"$gte": since}})
+        .unwrap_or_else(|| doc! {});
 
     let collection = db.collection::<HighScoreDocument>("highscore");
 
     let scores = collection
-        .find(filter, find_opts)
+        .find(filter)
+        .sort(doc! { "score": -1 })
+        .limit(10)
         .await
         .map_err(|e| {
             tracing::error!(?e, "Failed querying highscores to db cursor");

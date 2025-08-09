@@ -62,7 +62,7 @@ pub fn run() -> Result<(), JsValue> {
     };
 
     let highscore_url = match option_env!("HIGHSCORE_API_BASE_URL") {
-        Some(url) if url.is_empty() => fallback_url(),
+        Some("") => fallback_url(),
         Some(url) => String::from(url),
         None => fallback_url(),
     };
